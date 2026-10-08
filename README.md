@@ -1,0 +1,476 @@
+# 后台管理系统 · Vue 前端
+
+**后台管理系统** 的管理界面，基于 **Vue 3 + Vite + Element Plus + Pinia**，
+配套后端项目见 `../fastapi-admin-backend`。
+
+设计目标：**简约实用、开箱可用、看得舒服点得顺手**。与后端**完全解耦**，可单独部署，
+两者仅通过 HTTP 接口通讯。
+
+系统显示名称统一定义在 `src/constants/index.js` 的 `APP_NAME` 常量，侧边栏、浏览器标题、
+登录页会同步更新。
+
+---
+
+## 目录
+
+- [一、项目简介](#一项目简介)
+- [二、技术栈](#二技术栈)
+- [三、目录结构与各文件功能](#三目录结构与各文件功能)
+- [四、快速开始](#四快速开始)
+- [五、环境变量与接口地址](#五环境变量与接口地址)
+- [六、功能说明](#六功能说明)
+- [七、与后端的接口约定](#七与后端的接口约定)
+- [八、构建与部署](#八构建与部署)
+- [九、常见问题](#九常见问题)
+
+---
+
+## 一、项目简介
+
+| 能力 | 说明 |
+| --- | --- |
+| 登录认证 | JWT 登录、令牌本地持久化、access_token 过期自动静默续期 |
+| 仪表盘 | 统计卡片（注册会员 / 新增会员 / 后台账号 / 文章 / 草稿 / 浏览量） |
+| 后台账号（一级菜单） | 列表搜索分页、新建、编辑、启用/禁用、重置密码、删除 |
+| 用户管理（一级菜单） | 收纳「会员管理」子菜单 |
+| └ 会员管理 | 用户中心注册用户：统计概览、列表筛选、详情抽屉、编辑资料（昵称/头像/性别/生日/手机号/简介）、启用/禁用、重置密码、删除 |
+| 菜品管理（一级菜单） | 收纳「菜品列表 / 分类与标签 / 订单管理」三个子菜单，侧边栏可折叠展开 |
+| ├ 菜品列表 | 菜名/图片（可上传）/价格/库存/单位/状态、分类与标签、**套餐与售卖规则**（起购/限购/每日限量/供应时段）、库存调整、上架下架、销量与统计 |
+| ├ 分类与标签 | 分类 CRUD（含菜品数，分类下有菜品时禁止删除）、标签 CRUD（含颜色与关联菜品数） |
+| └ 订单管理 | 点菜订单列表（含**菜品明细**摘要、表格自适应满宽不留白）与筛选、订单详情（含明细快照）、接单/完成/取消（取消自动回滚库存与销量）、删除、今日经营统计 |
+| 内容管理（一级菜单） | 收纳「文章管理」子菜单 |
+| └ 文章管理 | 列表搜索分页、新建、编辑、发布/撤稿、详情预览、删除 |
+| 个人中心 | 查看账号信息、修改密码 |
+| 体验细节 | 面包屑、菜单权限过滤、加载态、空状态、统一错误提示、响应式布局 |
+
+> **关于「用户中心」前端页面**：本项目的定位是**后台管理端**，因此只包含「会员管理」。
+> 面向会员的注册 / 登录 / 忘记密码 / 个人中心页面属于另一个 C 端应用，
+> 直接调用后端已提供的 `/api/v1/member/**` 接口即可（接口清单见后端 README 第八节）。
+
+---
+
+## 二、技术栈
+
+| 组件 | 版本 | 用途 |
+| --- | --- | --- |
+| Vue | 3.5 | 前端框架（组合式 API + `<script setup>`） |
+| Vite | 6.x | 构建与开发服务器 |
+| Vue Router | 4.x | 路由与登录守卫 |
+| Pinia | 2.x | 状态管理（用户 / 应用） |
+| Element Plus | 2.9 | UI 组件库（中文语言包） |
+| Axios | 1.7 | HTTP 请求封装（拦截器 + 令牌续期） |
+| Sass | 1.83 | 样式预处理 |
+
+---
+
+## 三、目录结构与各文件功能
+
+```
+fastapi-admin-frontend/
+├── index.html                      入口 HTML（含首屏加载动画）
+├── vite.config.js                  构建配置：别名、接口代理、分包
+├── package.json                    依赖与脚本
+├── .env.development                开发环境变量（代理目标指向本地后端）
+├── .env.production                 生产环境变量（接口基地址）
+├── public/favicon.svg              站点图标
+│
+└── src/
+    ├── main.js                     应用入口：Pinia、Router、Element Plus、全局图标、401 跳转注入
+    ├── App.vue                     根组件（仅承载 router-view）
+    │
+    ├── api/                        ★ 接口层：一个后端模块对应一个文件
+    │   ├── request.js              Axios 实例：令牌注入、响应解包、错误提示、静默续期、失败重放
+    │   ├── auth.js                 /auth/*     登录、当前用户、改密、登出
+    │   ├── user.js                 /users/*    后台账号 CRUD、启禁用、重置密码
+    │   ├── member.js               /members/*  用户中心会员：列表、统计、详情、编辑、启禁用、重置密码
+    │   ├── dish.js                 /dishes/*   菜品 / 套餐 / 分类 / 标签 / 订单管理（点菜菜单）
+    │   ├── article.js              /articles/* 文章 CRUD、状态流转
+    │   └── system.js               /system/*   健康检查、系统信息（接口封装）、首页统计
+    │
+    ├── router/                     ★ 路由
+    │   ├── menu.js                 侧边栏菜单路由（含 title / icon / roles 元信息）
+    │   └── index.js                路由表 + 登录守卫 + 角色校验 + 标题设置
+    │
+    ├── stores/                     ★ 状态管理
+    │   ├── user.js                 令牌、当前用户、登录/登出/拉取信息
+    │   └── app.js                  侧边栏折叠状态、项目名
+    │
+    ├── layouts/
+    │   └── DefaultLayout.vue       后台主框架：侧边栏 + 顶栏 + 面包屑 + 内容区
+    │
+    ├── components/
+    │   └── PageHeader.vue          页面标题栏（标题 / 描述 / 右侧操作插槽）
+    │
+    ├── views/                      ★ 页面
+    │   ├── login/index.vue         登录页（左侧品牌介绍 + 右侧表单）
+    │   ├── dashboard/index.vue     仪表盘（统计卡片）
+    │   ├── user/index.vue          用户管理（表格 / 搜索 / 弹窗表单 / 密码重置）
+    │   ├── member/index.vue        会员管理（统计卡片 / 筛选 / 详情抽屉 / 编辑弹窗 / 启禁用）
+    │   ├── dish/index.vue          菜品管理（图片上传 / 分类标签 / 套餐与规则抽屉 / 库存调整）
+    │   ├── dish/meta.vue           分类与标签管理（双 Tab + 弹窗表单）
+    │   ├── dish/order.vue          订单管理（统计卡片 / 筛选 / 详情抽屉 / 状态流转）
+    │   ├── article/index.vue       文章管理（表格 / 抽屉详情 / 状态流转）
+    │   ├── profile/index.vue       个人中心（账号信息 + 修改密码）
+    │   └── error/404.vue           404 页面
+    │
+    ├── constants/index.js          与后端一致的枚举（角色、文章状态）及展示映射
+    ├── utils/
+    │   ├── auth.js                 令牌读写（localStorage 收口）
+    │   └── format.js               日期、数字、文本格式化
+    └── styles/index.scss           全局样式、主题 CSS 变量、Element Plus 主题覆盖
+```
+
+**分层约定（与后端一致的高内聚低耦合思路）**
+
+- 页面（`views`）只负责交互与展示，不直接写 `axios` 调用，统一走 `api/`。
+- `api/` 只描述「请求哪个接口、传什么参数」，不做业务判断。
+- `stores/` 承载跨页面共享状态（登录态、折叠状态），页面不互相传参。
+- `constants/` 与 `utils/` 为纯函数与常量，不依赖其他层。
+
+---
+
+## 四、快速开始
+
+> 需要 Node.js ≥ 18（推荐 20/22 LTS）。
+
+### 1. 安装依赖
+
+```powershell
+cd fastapi-admin-frontend
+npm install
+```
+
+### 2. 确认后端地址
+
+`.env.development` 默认已指向本地后端：
+
+```dotenv
+VITE_API_BASE_URL=/api/v1
+VITE_PROXY_TARGET=http://127.0.0.1:8000
+```
+
+如果后端不在本机 8000 端口，只改 `VITE_PROXY_TARGET` 即可。
+
+### 3. 启动开发服务器
+
+```powershell
+npm run dev
+```
+
+打开 http://localhost:5173 ，使用后端初始账号登录：
+
+```
+账号：admin
+密码：admin123
+```
+
+> 开发环境下 `/api` 由 Vite 代理转发到后端，**本地调试无需配置跨域**。
+
+### 4. 可选：正式构建并本地预览
+
+```powershell
+npm run build
+npm run preview
+```
+
+---
+
+## 五、环境变量与接口地址
+
+| 变量 | 说明 |
+| --- | --- |
+| `VITE_API_BASE_URL` | 接口基地址。同域部署用 `/api/v1`；后端独立域名用 `https://api.example.com/api/v1` |
+| `VITE_PROXY_TARGET` | **仅开发/预览环境有效**，把 `/api` 代理到该地址 |
+| `VITE_API_TIMEOUT` | 请求超时（毫秒） |
+
+三种典型组合：
+
+| 场景 | 配置 | 是否需要跨域 |
+| --- | --- | --- |
+| 本地开发 | `VITE_API_BASE_URL=/api/v1` + `VITE_PROXY_TARGET=http://127.0.0.1:8000` | 不需要 |
+| 生产同域（Nginx 同域托管前端并反代 `/api`） | `VITE_API_BASE_URL=/api/v1` | 不需要 |
+| 生产分离域名 | `VITE_API_BASE_URL=https://api.example.com/api/v1` | **需要把前端域名加入后端 `BACKEND_CORS_ORIGINS`** |
+
+修改 `.env.*` 后需要**重启**开发服务器才会生效。
+
+---
+
+## 六、功能说明
+
+### 侧边栏菜单结构
+
+菜单为「一级菜单（可折叠）+ 二级菜单」两层，全部定义在 `src/router/menu.js`：
+带 `children` 的节点渲染为可展开的一级菜单，其子项会被拍平成真实路由。
+
+```
+仪表盘              /dashboard
+后台账号            /users          （仅 admin）
+
+用户管理            （仅 admin）
+  └ 会员管理        /members
+
+菜品管理            （仅 admin）
+  ├ 菜品列表        /dishes
+  ├ 分类与标签      /dish-meta
+  └ 订单管理        /dish-orders
+
+内容管理
+  └ 文章管理        /articles
+```
+
+- 菜单项分两类：**叶子菜单**（如仪表盘、后台账号，直接是一级菜单）与**分组菜单**（带子菜单，可折叠展开）；
+- 面包屑显示三级：`首页 / 一级菜单 / 当前页`（叶子一级菜单只显示两级）；
+- 直接通过 URL 进入某个二级页面时，所属一级菜单会自动展开；
+- 分组与其子项都按角色过滤：**子项全部被过滤时，该分组不展示**；
+- `个人中心 /profile` 保留路由但不在菜单中展示（通过右上角头像菜单进入）。
+
+### 登录页 `/login`
+
+- 左侧品牌介绍区，右侧登录表单，支持回车提交、记住账号。
+- 登录成功后跳转到 `redirect` 参数指定的页面，默认进入仪表盘。
+
+### 仪表盘 `/dashboard`
+
+- 统计卡片：注册会员 / 近 7 天新增 / 后台账号 / 文章总数 / 草稿 / 累计浏览量。
+- 数据在进入页面时自动拉取。
+
+### 会员管理 `/members`（用户管理 ▸ 会员管理，仅 `admin` 角色可见）
+
+面向**用户中心自助注册的用户**（与「用户管理」的后台账号概念不同）：
+
+- **统计概览**：注册会员总数、启用中、近 7 天新增、邮箱已验证。
+- **筛选**：关键词（邮箱 / 昵称 / 手机号）、性别、启用状态、邮箱验证状态。
+- **详情抽屉**：头像、昵称、邮箱、性别、生日、年龄、手机号、个人简介、邮箱验证时间、
+  最后登录、注册时间、更新时间，并提供「编辑资料 / 禁用账号」快捷操作。
+- **编辑**：昵称、头像地址（带实时预览）、性别、生日（日期选择器）、手机号、简介、启用状态。
+- **启用 / 禁用**：表格内开关一键切换；禁用后该会员立即无法登录，已签发令牌同步失效。
+- **重置密码**：管理员直接设置新密码，无需邮箱验证码。
+- **删除**：二次确认后删除。
+
+### 后台账号 `/users`（一级菜单，仅 `admin` 角色可见）
+
+- 关键词（用户名/邮箱/昵称）、角色、启用状态组合筛选。
+- 新建 / 编辑用户（含密码强度校验：6–64 位且同时包含字母与数字）。
+- 表格内一键启用 / 禁用；重置密码；删除（带二次确认）。
+- 当前登录账号的禁用与删除按钮自动置灰，后端同时有「最后一个管理员」保护。
+
+> 下面三页统一收纳在侧边栏的一级菜单 **菜品管理** 下（`菜品管理 ▸ 菜品列表 / 分类与标签 / 订单管理`），
+> 面包屑会显示「首页 / 菜品管理 / 当前页」。
+
+### 菜品列表 `/dishes`（菜品管理 ▸ 菜品列表，仅 `admin` 角色可见）
+
+- **统计卡片**：菜品总数、在售中、库存告急（库存 < 10）、累计销量。
+- **筛选**：菜名/描述关键词、分类、标签、售卖状态、只看库存告急。
+- **新建 / 编辑**：菜名、描述、**图片（支持本地上传或直接填地址）**、价格、库存、单位、分类、标签（多选）、状态、排序、是否推荐。
+- **套餐与规则**：点「套餐」打开抽屉，可为同一道菜维护多个套餐，每个套餐独立设置
+  价格 / 库存 / 默认选中 / 是否可售，以及**起购份数、每单限购、每日限量、供应时段**；
+  抽屉内展示每个套餐的已售、今日已售、规则摘要。
+  未配置套餐的菜品会直接按菜品自身的价格与库存售卖。
+- **库存调整**：支持「补货 / 报损（在原库存上增减）」与「直接设为」两种方式。
+- **一键上下架**；表格中实时展示每个菜品的**已售数量**。
+
+### 分类与标签 `/dish-meta`（菜品管理 ▸ 分类与标签，仅 `admin` 角色可见）
+
+- **菜品分类**：分类 CRUD，展示每个分类下的菜品数；分类下仍有菜品时后端会拒绝删除并给出提示。
+- **菜品标签**：标签 CRUD，可选 Element Plus 语义色，展示关联菜品数；删除标签不会影响菜品本身。
+
+### 订单管理 `/dish-orders`（菜品管理 ▸ 订单管理，仅 `admin` 角色可见）
+
+- **统计卡片**：订单总数、待接单、今日订单、今日营业额。
+- **筛选**：订单号 / 桌号关键词、订单状态、下单时间范围。
+- **列表**：订单号、桌号、下单人（会员昵称或「扫码点单」）、份数、金额、状态、下单时间。
+- **详情抽屉**：订单信息 + 菜品明细（菜名、套餐名、图片、单价快照、数量、小计）+ 合计金额 + 快捷操作。
+- **状态流转**：待接单 →（接单）→ 已接单 →（完成）→ 已完成；待接单 / 已接单可取消。
+  **取消确认时会明确提示会回滚库存与销量**；已完成 / 已取消为终态。
+
+> 点菜菜单（`/api/v1/menu/**`）是面向顾客的 C 端接口：浏览无需登录、下单支持扫码匿名，
+> 本管理端只消费其中的后台管理接口。如需顾客端页面，可直接对接后端 `/menu/**` 接口。
+
+### 文章管理 `/articles`（内容管理 ▸ 文章管理）
+
+- 关键词（标题/摘要/标签）、状态筛选。
+- 新建 / 编辑：标题、标签、状态、摘要、正文（多行文本）。
+- 表格内一键发布 / 撤稿；点击标题打开右侧详情抽屉（后端会累加浏览量）。
+
+### 个人中心 `/profile`
+
+- 展示账号信息（ID、用户名、昵称、邮箱、状态、最后登录、创建时间）。
+- 修改密码（校验原密码、新密码强度、两次输入一致）。
+
+### 全局体验
+
+- 菜单按角色自动过滤；无权限访问时提示并跳回仪表盘。
+- `access_token` 过期时自动用 `refresh_token` 续期，并把期间失败的请求**自动重放**；
+  续期失败才跳转登录页。
+- 所有接口错误统一以 `ElMessage` 提示（文案取自后端 `message` 字段）。
+
+---
+
+## 七、与后端的接口约定
+
+### 基地址
+
+所有请求形如 `{VITE_API_BASE_URL}{path}`，默认 `/api/v1`。
+
+### 请求头
+
+```
+Content-Type: application/json
+Authorization: Bearer <access_token>     # 登录后自动添加
+```
+
+### 成功响应
+
+直接返回数据体（不使用 `code/message/data` 包裹）。分页接口固定为：
+
+```json
+{
+  "items": [],
+  "total": 0,
+  "page": 1,
+  "page_size": 10,
+  "pages": 0
+}
+```
+
+### 错误响应
+
+```json
+{ "code": 40100, "message": "用户名或密码错误", "data": null }
+```
+
+| HTTP 状态 | 前端行为 |
+| --- | --- |
+| 400 / 409 | 弹出 `message` 提示 |
+| 401 | 尝试刷新令牌；失败则清除本地令牌并跳转登录页 |
+| 403 | 弹出「需要管理员权限」 |
+| 404 | 弹出资源不存在的提示 |
+| 422 | 弹出参数校验失败提示 |
+| 5xx / 网络异常 | 弹出「网络异常，请检查后端服务是否已启动」 |
+
+### 使用的接口
+
+| 前端位置 | 接口 |
+| --- | --- |
+| 登录页 | `POST /auth/login` |
+| 路由守卫 / 顶栏 | `GET /auth/me` |
+| 令牌续期 | `POST /auth/refresh` |
+| 退出登录 | `POST /auth/logout` |
+| 修改密码 | `POST /auth/change-password` |
+| 仪表盘 | `GET /system/dashboard` |
+| 用户管理（后台账号） | `GET/POST /users`、`PUT /users/{id}`、`PATCH /users/{id}/status`、`PATCH /users/{id}/password`、`DELETE /users/{id}` |
+| 会员管理（用户中心） | `GET /members`、`GET /members/stats`、`GET/PUT /members/{id}`、`PATCH /members/{id}/status`、`PATCH /members/{id}/password`、`DELETE /members/{id}` |
+| 菜品管理 | `GET/POST /dishes`、`GET/PUT/DELETE /dishes/{id}`、`PATCH /dishes/{id}/status`、`PATCH /dishes/{id}/stock`、`POST /dishes/upload-image`、`GET /dishes/stats` |
+| 套餐管理 | `GET/POST /dishes/{id}/specs`、`PUT/DELETE /dishes/{id}/specs/{spec_id}` |
+| 分类 / 标签 | `GET/POST /dish-categories`、`PUT/DELETE /dish-categories/{id}`、`GET/POST /dish-tags`、`PUT/DELETE /dish-tags/{id}` |
+| 订单管理 | `GET /dish-orders`、`GET /dish-orders/{id}`、`PATCH /dish-orders/{id}/status`、`DELETE /dish-orders/{id}`、`GET /dish-orders/stats`、`GET /dish-orders/dish-sales` |
+| 文章管理 | `GET/POST /articles`、`GET/PUT/DELETE /articles/{id}`、`PATCH /articles/{id}/status` |
+
+### 会员头像的显示
+
+后端返回的头像地址形如 `/api/v1/static/avatars/xxx.png`，与接口同源（在 `/api` 前缀下），
+因此本地 Vite 代理和生产 Nginx 的 `/api` 反向代理都能直接访问，无需单独配置。
+未设置头像时，界面会退化为「昵称首字母 + 主题渐变」的圆形头像。
+
+> 接口契约以后端 `http://<后端地址>/docs` 的 OpenAPI 文档为准。
+
+---
+
+## 八、构建与部署
+
+### 8.1 构建
+
+```powershell
+npm run build      # 产物输出到 dist/
+```
+
+### 8.2 方案 A：与后端同域（推荐，零跨域配置）
+
+Nginx 同时托管前端静态文件并把 `/api` 反向代理到后端：
+
+```nginx
+server {
+    listen 80;
+    server_name admin.example.com;
+
+    root /var/www/admin;              # 把 dist/ 里的内容放这里
+    index index.html;
+
+    # 前端路由使用 history 模式，未命中的路径回退到 index.html
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # 接口反向代理到 FastAPI 服务
+    location /api/ {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # 静态资源缓存
+    location ~* \.(js|css|png|jpg|jpeg|gif|svg|woff2?)$ {
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+}
+```
+
+`.env.production` 保持 `VITE_API_BASE_URL=/api/v1` 后重新 `npm run build` 即可。
+
+### 8.3 方案 B：前后端分离域名
+
+1. `.env.production` 设置 `VITE_API_BASE_URL=https://api.example.com/api/v1`；
+2. **后端** `.env` 增加前端域名：
+
+```dotenv
+BACKEND_CORS_ORIGINS=https://admin.example.com
+```
+
+3. 重新构建并部署静态文件到任意静态服务器（Nginx / CDN / 对象存储）。
+
+### 8.4 方案 C：Docker 快速托管
+
+```dockerfile
+# Dockerfile
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+```
+
+```bash
+docker build -t admin-web .
+docker run -d -p 8080:80 --name admin-web admin-web
+```
+
+### 8.5 部署检查清单
+
+- [ ] `VITE_API_BASE_URL` 与实际接口地址一致
+- [ ] 使用 history 路由时，Nginx 已配置 `try_files ... /index.html`
+- [ ] 分离域名部署时，后端 `BACKEND_CORS_ORIGINS` 已包含前端域名
+- [ ] 通过浏览器控制台确认没有 CORS / 401 报错
+
+---
+
+## 九、常见问题
+
+| 现象 | 原因与处理 |
+| --- | --- |
+| 登录提示「网络异常」 | 后端未启动或 `VITE_PROXY_TARGET` 地址不对；先访问 `http://127.0.0.1:8000/api/v1/system/health` 确认 |
+| 控制台出现 CORS 报错 | 分离域名部署时未把前端域名加入后端 `BACKEND_CORS_ORIGINS`（或用了 `localhost` 访 `127.0.0.1`，需保持一致） |
+| 刷新页面 404 | 服务器未配置 `try_files $uri $uri/ /index.html` |
+| 改了 `.env` 不生效 | 需重启 `npm run dev`；`.env` 在构建时被静态替换 |
+| 登录后一直跳回登录页 | 本地令牌已失效，清理浏览器 `localStorage` 中的 `admin_access_token` / `admin_refresh_token` 后重试 |
+| 菜单里看不到「后台账号 / 用户管理 / 菜品管理」 | 这些一级菜单及其子项仅 `admin` 角色可见 |
+| 会员头像显示为字母圆块 | 该会员未上传头像（属于预期降级）；已上传却仍不显示时，检查 `/api/v1/static/` 是否被代理放行 |
+| 端口被占用 | `npm run dev -- --port 5174` 指定其他端口 |

@@ -1,0 +1,245 @@
+/**
+ * 全局样式与主题变量
+ * 通过 CSS 变量覆盖 Element Plus 主题色，避免额外引入主题编译流程。
+ */
+
+:root {
+  /* 品牌色 */
+  --app-primary: #4f46e5;
+  --app-primary-light: #6366f1;
+  --app-primary-soft: rgba(79, 70, 229, 0.1);
+  --app-success: #10b981;
+  --app-warning: #f59e0b;
+  --app-danger: #ef4444;
+  --app-info: #64748b;
+
+  /* 中性色 */
+  --app-bg: #f5f7fb;
+  --app-surface: #ffffff;
+  --app-border: #e8ecf3;
+  --app-text: #1f2937;
+  --app-text-secondary: #6b7280;
+  --app-text-placeholder: #9ca3af;
+
+  /* 侧边栏 */
+  --app-sidebar-bg: #111827;
+  --app-sidebar-text: #cbd5e1;
+  --app-sidebar-active: #1e293b;
+
+  /* 阴影与圆角 */
+  --app-shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --app-shadow: 0 4px 16px rgba(16, 24, 40, 0.06);
+  --app-shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.12);
+  --app-radius: 10px;
+  --app-radius-sm: 8px;
+
+  /* 布局尺寸 */
+  --app-sidebar-width: 220px;
+  --app-sidebar-collapsed-width: 64px;
+  --app-header-height: 60px;
+
+  /* 覆盖 Element Plus 主题色 */
+  --el-color-primary: #4f46e5;
+  --el-color-primary-light-3: #7c74ec;
+  --el-color-primary-light-5: #a5a0f2;
+  --el-color-primary-light-7: #cbc8f7;
+  --el-color-primary-light-8: #dedcfb;
+  --el-color-primary-light-9: #f0effd;
+  --el-color-primary-dark-2: #3f37b7;
+  --el-border-radius-base: 8px;
+  --el-font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--el-font-family);
+  color: var(--app-text);
+  background-color: var(--app-bg);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--app-primary);
+  text-decoration: none;
+}
+
+/* 通用卡片 */
+.app-card {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius);
+  box-shadow: var(--app-shadow-sm);
+}
+
+/* 页面容器 */
+.page-container {
+  padding: 16px 20px 24px;
+}
+
+/* 表格工具栏 */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.toolbar__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.pagination-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c7ced9;
+  border-radius: 4px;
+
+  &:hover {
+    background: #aab3c2;
+  }
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 路由过渡动画 */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+/* 首屏加载动画（index.html 中使用） */
+.app-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  gap: 16px;
+  color: var(--app-text-secondary);
+
+  &__spinner {
+    width: 38px;
+    height: 38px;
+    border: 3px solid var(--app-primary-soft);
+    border-top-color: var(--app-primary);
+    border-radius: 50%;
+    animation: app-spin 0.8s linear infinite;
+  }
+}
+
+@keyframes app-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Element Plus 细节微调 */
+.el-card {
+  border-radius: var(--app-radius);
+}
+
+.el-table th.el-table__cell {
+  background-color: #fafbfd !important;
+  color: var(--app-text-secondary);
+  font-weight: 600;
+}
+
+.el-dialog {
+  border-radius: var(--app-radius);
+}
+
+.el-button + .el-button {
+  margin-left: 8px;
+}
+
+/* 侧边栏一级菜单折叠后的弹出子菜单。
+   弹出层由 el-sub-menu 内部 teleport 到 body，组件内的 scoped 样式无法命中，
+   因此统一放在全局样式中（本项目只有侧边栏使用了 el-menu）。 */
+.el-menu--popup-container {
+  padding: 6px;
+  border: none;
+  border-radius: var(--app-radius-sm);
+  background: #1f2937;
+  box-shadow: var(--app-shadow-lg);
+}
+
+.el-menu--popup {
+  min-width: 148px;
+  background: transparent !important;
+}
+
+.el-menu--popup .el-menu-item {
+  height: 38px;
+  margin-bottom: 2px;
+  padding: 0 12px !important;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--app-sidebar-text) !important;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    color: #fff !important;
+  }
+
+  &.is-active {
+    background: linear-gradient(90deg, var(--app-primary) 0%, var(--app-primary-light) 100%);
+    color: #fff !important;
+  }
+}
+
+/* 表格：固定操作列在被遮挡处补一层渐隐阴影，避免看起来像内容被截断 */
+.el-table {
+  .el-table-fixed-column--right {
+    background-color: var(--app-surface);
+  }
+
+  .el-table-fixed-column--right.is-first-column::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -8px;
+    width: 8px;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(16, 24, 40, 0), rgba(16, 24, 40, 0.08));
+  }
+}
