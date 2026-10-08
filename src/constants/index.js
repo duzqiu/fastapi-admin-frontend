@@ -9,12 +9,6 @@ export const USER_ROLES = [
   { value: 'user', label: '普通用户', tag: 'info' },
 ]
 
-export const ARTICLE_STATUS = [
-  { value: 'draft', label: '草稿', tag: 'info' },
-  { value: 'published', label: '已发布', tag: 'success' },
-  { value: 'archived', label: '已归档', tag: 'warning' },
-]
-
 /** 用户中心会员性别（与后端 MemberGender 一致） */
 export const MEMBER_GENDERS = [
   { value: 'unknown', label: '保密', tag: 'info', icon: 'QuestionFilled' },
@@ -51,9 +45,6 @@ const findOption = (options, value) => options.find((item) => item.value === val
 
 export const roleLabel = (value) => findOption(USER_ROLES, value)?.label || value
 export const roleTagType = (value) => findOption(USER_ROLES, value)?.tag || 'info'
-
-export const statusLabel = (value) => findOption(ARTICLE_STATUS, value)?.label || value
-export const statusTagType = (value) => findOption(ARTICLE_STATUS, value)?.tag || 'info'
 
 export const genderLabel = (value) => findOption(MEMBER_GENDERS, value)?.label || '保密'
 export const genderTagType = (value) => findOption(MEMBER_GENDERS, value)?.tag || 'info'

@@ -86,8 +86,8 @@ export function deleteCategory(id) {
 }
 
 // ==================== 标签 ====================
-export function fetchTags() {
-  return request.get('/dish-tags')
+export function fetchTags(params) {
+  return request.get('/dish-tags', { params })
 }
 
 export function createTag(data) {

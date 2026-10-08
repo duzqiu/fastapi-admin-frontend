@@ -1,6 +1,6 @@
 <template>
   <div class="page-container">
-    <PageHeader title="会员管理" description="查看用户中心注册用户，修改资料、启用禁用、重置密码" />
+    <PageHeader title="用户列表" description="查看用户中心注册用户，修改资料、启用禁用、重置密码" />
 
     <!-- 统计卡片 -->
     <div class="stat-grid">

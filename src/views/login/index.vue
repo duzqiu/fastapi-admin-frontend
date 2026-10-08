@@ -93,8 +93,8 @@ const REMEMBER_KEY = 'admin_remember_username'
 
 /** 后台已有功能模块 */
 const MODULES = [
-  { icon: 'Avatar', name: '会员管理', desc: '注册会员资料与状态' },
-  { icon: 'Document', name: '文章管理', desc: '内容编辑与发布撤稿' },
+  { icon: 'Avatar', name: '用户列表', desc: '注册用户资料与状态' },
+  { icon: 'Bowl', name: '菜品管理', desc: '菜品、套餐与订单' },
   { icon: 'Setting', name: '个人中心', desc: '账号信息与密码修改' },
 ]
 

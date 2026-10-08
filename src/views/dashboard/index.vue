@@ -36,10 +36,6 @@ const stats = ref({
   member_active: 0,
   member_disabled: 0,
   member_new_7_days: 0,
-  article_total: 0,
-  article_published: 0,
-  article_draft: 0,
-  article_views: 0,
 })
 
 const cards = computed(() => [
@@ -69,33 +65,6 @@ const cards = computed(() => [
     icon: 'User',
     color: '#8b5cf6',
     bg: 'rgba(139, 92, 246, 0.12)',
-  },
-  {
-    key: 'articles',
-    label: '文章总数',
-    value: stats.value.article_total,
-    extra: `已发布 ${stats.value.article_published} 篇`,
-    icon: 'Document',
-    color: '#6366f1',
-    bg: 'rgba(99, 102, 241, 0.12)',
-  },
-  {
-    key: 'draft',
-    label: '草稿',
-    value: stats.value.article_draft,
-    extra: '待完善',
-    icon: 'EditPen',
-    color: '#f59e0b',
-    bg: 'rgba(245, 158, 11, 0.14)',
-  },
-  {
-    key: 'views',
-    label: '累计浏览量',
-    value: stats.value.article_views,
-    extra: '详情页访问',
-    icon: 'View',
-    color: '#10b981',
-    bg: 'rgba(16, 185, 129, 0.12)',
   },
 ])
 
