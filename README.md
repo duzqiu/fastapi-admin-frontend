@@ -33,7 +33,7 @@
 | 仪表盘 | 统计卡片（注册会员 / 近 7 天新增会员 / 后台账号） |
 | 后台账号（一级菜单） | 列表搜索分页、新建、编辑、启用/禁用、重置密码、删除 |
 | 用户管理（一级菜单） | 收纳「用户列表」子菜单 |
-| └ 用户列表 | 用户中心注册用户：统计概览、列表筛选、详情抽屉、编辑资料（昵称/头像/性别/生日/手机号/简介）、启用/禁用、重置密码、删除 |
+| └ 用户列表 | 用户中心注册用户：统计概览、6 位用户 ID 展示与检索、列表筛选、详情抽屉、编辑资料（昵称/头像/性别/生日/手机号/简介）、启用/禁用、重置密码、删除 |
 | 菜品管理（一级菜单） | 收纳「菜品列表 / 菜品分类 / 菜品标签 / 订单管理」四个子菜单，侧边栏可折叠展开 |
 | ├ 菜品列表 | 菜名/图片（可上传）/价格/库存/单位/状态、分类与标签、**套餐与售卖规则**（起购/限购/每日限量/供应时段）、库存调整、上架下架、销量与统计 |
 | ├ 菜品分类 | 分类 CRUD，展示每个分类下的菜品数；分类下仍有菜品时禁止删除 |
@@ -235,9 +235,11 @@ npm run preview
 面向**用户中心自助注册的用户**（与「用户管理」的后台账号概念不同）：
 
 - **统计概览**：注册会员总数、启用中、近 7 天新增、邮箱已验证。
-- **筛选**：关键词（邮箱 / 昵称 / 手机号）、性别、启用状态、邮箱验证状态。
-- **详情抽屉**：头像、昵称、邮箱、性别、生日、年龄、手机号、个人简介、邮箱验证时间、
-  最后登录、注册时间、更新时间，并提供「编辑资料 / 禁用账号」快捷操作。
+- **列表**：内部ID（数据库主键）、**用户ID**（注册时生成的 6 位唯一编号）、会员（头像 / 昵称 / 邮箱）、
+  性别、生日、邮箱验证、状态开关、最后登录、注册时间。
+- **筛选**：关键词（**用户ID** / 邮箱 / 昵称 / 手机号，支持片段匹配）、性别、启用状态、邮箱验证状态。
+- **详情抽屉**：用户 ID、内部 ID、头像、昵称、邮箱、性别、生日、年龄、手机号、个人简介、
+  邮箱验证时间、最后登录、注册时间、更新时间，并提供「编辑资料 / 禁用账号」快捷操作。
 - **编辑**：昵称、头像地址（带实时预览）、性别、生日（日期选择器）、手机号、简介、启用状态。
 - **启用 / 禁用**：表格内开关一键切换；禁用后该会员立即无法登录，已签发令牌同步失效。
 - **重置密码**：管理员直接设置新密码，无需邮箱验证码。
@@ -357,7 +359,7 @@ Authorization: Bearer <access_token>     # 登录后自动添加
 | 修改密码 | `POST /auth/change-password` |
 | 仪表盘 | `GET /system/dashboard` |
 | 用户管理（后台账号） | `GET/POST /users`、`PUT /users/{id}`、`PATCH /users/{id}/status`、`PATCH /users/{id}/password`、`DELETE /users/{id}` |
-| 用户列表（用户中心） | `GET /members`、`GET /members/stats`、`GET/PUT /members/{id}`、`PATCH /members/{id}/status`、`PATCH /members/{id}/password`、`DELETE /members/{id}` |
+| 用户列表（用户中心） | `GET /members`（`keyword` 支持用户ID / 邮箱 / 昵称 / 手机号）、`GET /members/stats`、`GET/PUT /members/{id}`、`PATCH /members/{id}/status`、`PATCH /members/{id}/password`、`DELETE /members/{id}` |
 | 菜品管理 | `GET/POST /dishes`、`GET/PUT/DELETE /dishes/{id}`、`PATCH /dishes/{id}/status`、`PATCH /dishes/{id}/stock`、`POST /dishes/upload-image`、`GET /dishes/stats` |
 | 套餐管理 | `GET/POST /dishes/{id}/specs`、`PUT/DELETE /dishes/{id}/specs/{spec_id}` |
 | 分类 / 标签 | `GET/POST /dish-categories`、`PUT/DELETE /dish-categories/{id}`、`GET/POST /dish-tags`（支持 `only_active`）、`PUT/DELETE /dish-tags/{id}` |

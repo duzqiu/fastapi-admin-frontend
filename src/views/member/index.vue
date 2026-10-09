@@ -21,9 +21,9 @@
         <div class="toolbar__filters">
           <el-input
             v-model="query.keyword"
-            placeholder="邮箱 / 昵称 / 手机号"
+            placeholder="用户ID / 邮箱 / 昵称 / 手机号"
             clearable
-            style="width: 220px"
+            style="width: 250px"
             @keyup.enter="handleSearch"
             @clear="handleSearch"
           >
@@ -65,9 +65,15 @@
 
       <!-- 数据表 -->
       <el-table v-loading="loading" :data="rows" stripe row-key="id" empty-text="暂无会员数据">
-        <el-table-column prop="id" label="ID" width="70" />
+        <!-- 除「会员」用 min-width 自适应外，其余列固定宽：保证表格始终填满容器、右侧不留白 -->
+        <el-table-column prop="id" label="内部ID" width="72" />
+        <el-table-column label="用户ID" width="86" show-overflow-tooltip>
+          <template #default="{ row }">
+            <span class="member-no">{{ row.member_no || '-' }}</span>
+          </template>
+        </el-table-column>
 
-        <el-table-column label="会员" min-width="220">
+        <el-table-column label="会员" min-width="190">
           <template #default="{ row }">
             <div class="member-cell">
               <el-avatar :size="34" :src="row.avatar || undefined" class="member-cell__avatar">
@@ -81,7 +87,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="性别" width="90">
+        <el-table-column label="性别" width="72">
           <template #default="{ row }">
             <el-tag :type="genderTagType(row.gender)" size="small" effect="light">
               {{ genderLabel(row.gender) }}
@@ -89,11 +95,11 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="生日" width="120">
+        <el-table-column label="生日" width="104">
           <template #default="{ row }">{{ row.birthday || '-' }}</template>
         </el-table-column>
 
-        <el-table-column label="邮箱验证" width="100">
+        <el-table-column label="邮箱验证" width="86">
           <template #default="{ row }">
             <el-tag :type="row.email_verified ? 'success' : 'warning'" size="small" effect="plain">
               {{ row.email_verified ? '已验证' : '未验证' }}
@@ -101,7 +107,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="状态" width="90">
+        <el-table-column label="状态" width="74">
           <template #default="{ row }">
             <el-switch
               :model-value="row.is_active"
@@ -111,15 +117,15 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="最后登录" width="160">
+        <el-table-column label="最后登录" width="168">
           <template #default="{ row }">{{ formatDateTime(row.last_login_at) }}</template>
         </el-table-column>
 
-        <el-table-column label="注册时间" width="160">
+        <el-table-column label="注册时间" width="168">
           <template #default="{ row }">{{ formatDateTime(row.created_at) }}</template>
         </el-table-column>
 
-        <el-table-column label="操作" width="230" fixed="right">
+        <el-table-column label="操作" width="216" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" @click="openDetail(row)">详情</el-button>
             <el-button link type="primary" @click="openEdit(row)">编辑</el-button>
@@ -166,7 +172,8 @@
         </div>
 
         <el-descriptions :column="1" border size="small">
-          <el-descriptions-item label="用户 ID">{{ detail.data.id }}</el-descriptions-item>
+          <el-descriptions-item label="用户 ID">{{ detail.data.member_no || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="内部 ID">{{ detail.data.id }}</el-descriptions-item>
           <el-descriptions-item label="昵称">{{ detail.data.nickname || '-' }}</el-descriptions-item>
           <el-descriptions-item label="性别">{{ genderLabel(detail.data.gender) }}</el-descriptions-item>
           <el-descriptions-item label="生日">{{ detail.data.birthday || '-' }}</el-descriptions-item>
@@ -634,6 +641,14 @@ onMounted(loadAll)
     line-height: 1.3;
     color: var(--app-text);
   }
+}
+
+/* 6 位用户 ID：等宽数字并加粗，便于快速核对 */
+.member-no {
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  font-variant-numeric: tabular-nums;
+  color: var(--app-primary);
 }
 
 .member-cell {
