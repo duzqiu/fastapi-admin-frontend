@@ -12,7 +12,12 @@
 #                     要完全固定可写 1.30.5-alpine，但补丁更新就得手动跟）
 #   VITE_API_BASE_URL 接口基址：默认 /api/v1（相对路径 → 同源，由下面的 Nginx 反代，天然无跨域）
 #   VITE_API_TIMEOUT  接口超时（毫秒）
+# ⚠️ 两个基础镜像的 ARG 都必须写在「第一个 FROM 之前」：
+#    ARG 的作用域在它所在 stage 结束时就失效，写在第一个 stage 里面的话，
+#    第二个 FROM 引用的 ${NGINX_IMAGE} 会解析成空值 → base name (${NGINX_IMAGE}) should not be blank
 ARG NODE_IMAGE=node:26-alpine
+ARG NGINX_IMAGE=nginx:1.30-alpine
+
 FROM ${NODE_IMAGE} AS build
 
 # FROM 之后需要重新声明才能在这个阶段里使用
@@ -34,7 +39,7 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
 RUN npm run build
 
 # ---------------------------- 运行阶段 ----------------------------
-ARG NGINX_IMAGE=nginx:1.30-alpine
+# NGINX_IMAGE 已在文件顶部（第一个 FROM 之前）声明，这里直接用即可
 FROM ${NGINX_IMAGE}
 
 # 只让 envsubst 替换 API_UPSTREAM，避免动到 nginx 自身的 $uri / $host 等变量
