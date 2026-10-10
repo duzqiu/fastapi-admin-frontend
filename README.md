@@ -453,12 +453,16 @@ BACKEND_CORS_ORIGINS=https://admin.example.com
 由 Nginx 转发给后端，因此**完全不需要配置 CORS**；后端的上传文件（`/api/v1/static/*`）与内置静态资源
 （`/api/v1/assets/*`）也都在 `/api` 前缀下，同一条代理规则即可覆盖。
 
-Nginx 转发到后端有两种接法，`.env` 里对应的两个变量**必须成对选择**：
+Nginx 转发到后端有两种接法：
 
-| 接法 | `API_UPSTREAM` | `BACKEND_NETWORK` | 说明 |
+| 接法 | `API_UPSTREAM` | 网络声明 | 说明 |
 | --- | --- | --- | --- |
-| **A · 默认（零配置）** | `http://host.docker.internal:8000` | `bridge` | 走宿主机映射端口。`bridge` 是 Docker 自带网络、永远存在，**不会出现 `network ... could not be found`** |
-| B · 共享网络 | `http://backend:8000` | 后端 compose 的真实网络名 | 少一层 NAT，后端 8000 也可以不对外暴露；但该网络必须先存在 |
+| **A · 默认（零配置）** | `http://host.docker.internal:8000` | **不声明 `networks`** | 走宿主机映射端口。Compose 会自动建一个用户自定义网络，别名与容器互访都正常 |
+| B · 共享网络 | `http://backend:8000` | 打开 compose 里两处「接法 B」注释块，并设 `BACKEND_NETWORK` | 少一层 NAT，后端 8000 可以不对宿主机暴露；但该网络必须先存在 |
+
+> ⚠️ **不要把网络指向 Docker 默认的 `bridge`**：Compose 会给容器设置 network-scoped alias（服务名 / 容器名），
+> 而 Docker 只允许在**用户自定义网络**上使用别名，指向默认 `bridge` 会直接报
+> `network-scoped alias is supported only for containers in user defined networks`。
 
 ```bash
 # 0) 先确认后端已经在跑（前端要能访问到它的 8000 端口）
@@ -475,7 +479,10 @@ docker compose up -d --build
 docker compose logs -f frontend
 ```
 
-> **想换成接法 B（共享网络）**：先查出后端的真实网络名，再改 `.env` 里那两行。
+> **想换成接法 B（共享网络）**：需要三处一起改 ——
+> ① 打开 `docker-compose.yml` 里两处标注「接法 B」的 `networks` 注释块；
+> ② `.env` 的 `API_UPSTREAM` 改成 `http://backend:8000`；
+> ③ `.env` 的 `BACKEND_NETWORK` 改成后端的真实网络名：
 >
 > ```bash
 > docker compose ls        # 确认后端 compose 项目在跑；默认网络名 = 「项目名_default」
@@ -483,7 +490,7 @@ docker compose logs -f frontend
 > ```
 >
 > 如果报 `network xxx declared as external, but could not be found`，说明名字不对或后端没起 ——
-> 退回接法 A（`BACKEND_NETWORK=bridge`）即可，功能上没有任何区别，只是多一层宿主机转发。
+> 把 ① 的两处注释块改回注释状态即可退回接法 A，功能上没有任何区别，只是多一层宿主机转发。
 
 访问 `http://<服务器IP>:8080/`。想确认反代是否打通，直接看
 `http://<服务器IP>:8080/api/v1/system/health`，能返回后端的健康检查结果即为正常。
@@ -497,7 +504,7 @@ docker compose logs -f frontend
 | --- | --- | --- |
 | `FRONTEND_PORT` | `8080` | 宿主机端口（80 常被系统 / NAS 面板占用） |
 | `API_UPSTREAM` | `http://host.docker.internal:8000` | 后端地址。接法 B 时改成 `http://backend:8000`（服务名）或 `http://admin-backend:8000`（容器名） |
-| `BACKEND_NETWORK` | `bridge` | 与 `API_UPSTREAM` 成对：接法 A 用 `bridge`（Docker 自带网络，零配置）；接法 B 填后端 compose 的真实网络名 |
+| `BACKEND_NETWORK` | `fastapi-admin_default` | **只在接法 B 生效**（compose 里那段 `networks` 默认处于注释状态）：填后端 compose 的真实网络名。接法 A 完全不读它 |
 | `NPM_REGISTRY` | 官方源 | 国内建议 `https://registry.npmmirror.com` |
 | `NODE_IMAGE` / `NGINX_IMAGE` | `node:26-alpine` / `nginx:1.30-alpine` | Node 26（Current，预计 2026-10 转 LTS；仅用于构建阶段）；nginx 1.30 为 stable 分支。拉不动时填**完整仓库地址**绕过失效的镜像加速器 |
 | `VITE_API_BASE_URL` | `/api/v1` | 保持相对路径；改成完整地址即等于方案 B（此时必须配 CORS） |
@@ -522,7 +529,7 @@ docker run -d --name admin-web -p 8080:80 \
 Docker 部署（方案 C）额外确认：
 
 - [ ] 前端仓库的 `Dockerfile` / `.dockerignore` / `nginx.conf` 已 push 到 GitHub
-- [ ] `.env` 的 `API_UPSTREAM` 与 `BACKEND_NETWORK` 是配套的一对（接法 A：`host.docker.internal:8000` + `bridge`；接法 B：`backend:8000` + 后端真实网络名）
+- [ ] 确认走的是接法 A（默认，compose 里不声明 `networks`）还是接法 B（已打开两处 `networks` 注释块，且 `API_UPSTREAM` / `BACKEND_NETWORK` 配套）
 - [ ] `curl http://<服务器IP>:8080/api/v1/system/health` 能返回后端健康检查结果
 - [ ] `docker compose ps` 里 `admin-frontend` 为 `healthy`
 
@@ -541,7 +548,8 @@ Docker 部署（方案 C）额外确认：
 | 会员头像显示为字母圆块 | 该会员未上传头像（属于预期降级）；已上传却仍不显示时，检查 `/api/v1/static/` 是否被代理放行 |
 | 端口被占用 | `npm run dev -- --port 5174` 指定其他端口 |
 | Docker 里页面能打开但所有接口 502 | Nginx 代理不到后端：`API_UPSTREAM` 写错，或前端容器没和后端在同一网络。在容器内直接验证：`docker exec admin-frontend wget -qO- http://backend:8000/api/v1/system/health` |
-| 启动报 `network xxx declared as external, but could not be found` | `external: true` 的网络必须**先存在**。最省事：把 `.env` 的 `BACKEND_NETWORK` 改回 `bridge`、`API_UPSTREAM` 改回 `http://host.docker.internal:8000`（接法 A，零配置）。想共享网络则用 `docker compose ls` / `docker inspect admin-backend --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{end}}'` 查出真实网络名（**不一定是 `fastapi-admin_default`**，默认是「后端 compose 项目名_default」，例如目录叫 `fastapi-admin-backend` 时是 `fastapi-admin-backend_default`） |
+| 启动报 `network-scoped alias is supported only for containers in user defined networks` | 你把网络指向了 Docker 默认的 `bridge`。别名只能用在**用户自定义网络**上，而 Compose 必定会给容器加服务名 / 容器名别名。去掉 compose 里的 `networks` 声明（即接法 A，默认配置）即可；想共享后端网络就把 `BACKEND_NETWORK` 填成后端那个**用户自定义**网络名 |
+| 启动报 `network xxx declared as external, but could not be found` | `external: true` 的网络必须**先存在**。接法 A 根本不声明网络，不会遇到；若在用接法 B，用 `docker compose ls` / `docker inspect admin-backend --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{end}}'` 查真实网络名（**不一定是 `fastapi-admin_default`**，默认是「后端 compose 项目名_default」，例如目录叫 `fastapi-admin-backend` 时是 `fastapi-admin-backend_default`） |
 | 前端容器反复重启 / 日志报 `host not found in upstream` | 容器启动时解析不到 `API_UPSTREAM`，nginx 会直接退出。确认后端服务名/容器名拼写，或改用 `http://host.docker.internal:8000`；`restart: unless-stopped` 会自动重试 |
 | 构建时 `npm ci` 超时 / `ECONNRESET` | 在 `.env` 里把 `NPM_REGISTRY` 改成国内源（如 `https://registry.npmmirror.com`）后重新构建 |
 | 构建报 `failed to resolve source metadata ... 403 / 401` | 与后端同理：Docker daemon 里配的加速器失效了。在 `.env` 里给 `NODE_IMAGE` / `NGINX_IMAGE` 填**完整仓库地址**（带域名即绕过加速器） |
