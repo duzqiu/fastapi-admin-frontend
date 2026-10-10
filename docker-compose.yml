@@ -40,10 +40,11 @@ services:
       - "host.docker.internal:host-gateway"
     environment:
       TZ: ${TZ:-Asia/Shanghai}
-      # 后端接口地址，容器启动时注入 Nginx。二选一：
-      #   A（推荐）共享网络：http://backend:8000（后端服务名）或 http://admin-backend:8000（容器名）
-      #   B 走宿主机映射端口：http://host.docker.internal:8000
-      API_UPSTREAM: ${API_UPSTREAM:-http://backend:8000}
+      # 后端接口地址，容器启动时注入 Nginx。两种接法，需与文件末尾的 BACKEND_NETWORK 成对使用：
+      #   A 默认·零配置：http://host.docker.internal:8000 —— 走宿主机映射端口，不需要共享任何网络
+      #   B 共享网络（少一层 NAT）：http://backend:8000（后端服务名）或 http://admin-backend:8000（容器名），
+      #     同时把 BACKEND_NETWORK 设成后端 compose 的网络名
+      API_UPSTREAM: ${API_UPSTREAM:-http://host.docker.internal:8000}
     ports:
       # 宿主机端口可改；80 通常被系统 / NAS 面板占用，所以默认给 8080
       - "${FRONTEND_PORT:-8080}:80"
@@ -57,7 +58,10 @@ services:
       start_period: 10s
 
 networks:
-  # 复用后端 compose 创建的网络：不是本文件创建的，所以要 external: true
+  # external: true 表示「该网络必须已经存在」，本 compose 不负责创建它 ——
+  # 写错了会直接报 network xxx declared as external, but could not be found。
+  # 默认 bridge = Docker 自带的默认网络，永远存在，所以默认配置开箱即用（配合 A 接法走宿主机端口）。
+  # 想用 B 接法共享后端网络，把 BACKEND_NETWORK 设成后端 compose 的网络名即可（如 fastapi-admin_default）。
   backend-net:
     external: true
-    name: ${BACKEND_NETWORK:-fastapi-admin_default}
+    name: ${BACKEND_NETWORK:-bridge}
