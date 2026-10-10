@@ -71,6 +71,11 @@ fastapi-admin-frontend/
 ├── package.json                    依赖与脚本
 ├── .env.development                开发环境变量（代理目标指向本地后端）
 ├── .env.production                 生产环境变量（接口基地址）
+├── Dockerfile                      ★ 容器镜像：Node 构建 + Nginx 托管（参数可覆盖基础镜像 / npm 源）
+├── nginx.conf                      ★ Nginx 模板：SPA 回退 + /api 反向代理到后端（地址启动时注入）
+├── docker-compose.yml              ★ 前端容器编排：复用后端 compose 网络，浏览器只访问前端，无跨域
+├── .dockerignore                   构建上下文排除项（node_modules / dist / 本地 .env）
+├── .env.docker.example             compose 变量模板（cp 成 .env 后使用）
 ├── public/favicon.svg              站点图标
 │
 └── src/
@@ -129,7 +134,9 @@ fastapi-admin-frontend/
 
 ## 四、快速开始
 
-> 需要 Node.js ≥ 18（推荐 20/22 LTS）。
+> 需要 Node.js ≥ 18；**Node 18 / 20 均已 EOL**。容器镜像默认用 `node:26-alpine` 构建
+> （Node 26 目前是 Current，预计 2026-10 转入 LTS）；想要 LTS 就写 `node:24`。
+> 该阶段只负责构建，产物会拷进 nginx 阶段，不影响最终镜像体积。
 
 ### 1. 安装依赖
 
@@ -430,26 +437,67 @@ BACKEND_CORS_ORIGINS=https://admin.example.com
 
 3. 重新构建并部署静态文件到任意静态服务器（Nginx / CDN / 对象存储）。
 
-### 8.4 方案 C：Docker 快速托管
+### 8.4 方案 C：Docker 一键托管（仓库自带编排）
 
-```dockerfile
-# Dockerfile
-FROM node:20-alpine AS build
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
+仓库根目录已经放好了完整的容器化文件，镜像是**两阶段**的：`node:26-alpine` 里构建出 `dist/`，
+再拷进 `nginx:1.30-alpine` 托管：
 
-FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+| 文件 | 作用 |
+| --- | --- |
+| `Dockerfile` | 多阶段构建；`NODE_IMAGE` / `NPM_REGISTRY` / `NGINX_IMAGE` 等构建参数可覆盖，便于受限网络 |
+| `nginx.conf` | Nginx 模板：SPA 回退、静态资源长缓存、`/api` 反向代理（后端地址在容器启动时注入） |
+| `docker-compose.yml` | 前端服务编排，`build.context` 指向 GitHub 仓库，**复用后端 compose 的网络** |
+| `.env.docker.example` | 变量模板（`cp` 成 `.env` 后使用） |
+
+**核心思路：前端和后端共享同一个 Docker 网络，浏览器自始至终只访问前端这一个源。**
+`VITE_API_BASE_URL` 保持相对路径 `/api/v1`，由 Nginx 转发给后端容器，因此**完全不需要配置 CORS**。
+顺带说明：后端的上传文件（`/api/v1/static/*`）与内置静态资源（`/api/v1/assets/*`）都在 `/api` 前缀下，
+同一条代理规则即可覆盖，不必额外加 location。
+
+```bash
+# 0) 先确认后端已经在跑（网络是后端 compose 创建的）
+docker ps --format "table {{.Names}}\t{{.Status}}"
+
+# 1) 在服务器上准备两个文件（不用拷源码）
+mkdir -p /opt/fastapi-admin-web && cd /opt/fastapi-admin-web
+#   docker-compose.yml
+#   .env.docker.example
+cp .env.docker.example .env
+
+# 2) 确认后端所在的网络名（后端 compose 里写了 name: fastapi-admin）
+docker inspect admin-backend --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{end}}'
+#   输出的名字填到 .env 的 BACKEND_NETWORK（默认已是 fastapi-admin_default）
+
+# 3) 构建并启动
+docker compose up -d --build
+docker compose logs -f frontend
 ```
+
+访问 `http://<服务器IP>:8080/`。想确认反代是否打通，直接看
+`http://<服务器IP>:8080/api/v1/system/health`，能返回后端的健康检查结果即为正常。
+
+> ⚠️ 仓库里的 `Dockerfile` / `.dockerignore` / `nginx.conf` **必须先 push**：
+> `build.context` 指向 GitHub 仓库，构建用的是远端文件。
+
+常用变量（写在 `.env` 里）：
+
+| 变量 | 默认值 | 说明 |
+| --- | --- | --- |
+| `FRONTEND_PORT` | `8080` | 宿主机端口（80 常被系统 / NAS 面板占用） |
+| `API_UPSTREAM` | `http://backend:8000` | 后端地址。也可写 `http://admin-backend:8000`（容器名），或 `http://host.docker.internal:8000`（走宿主机映射端口） |
+| `BACKEND_NETWORK` | `fastapi-admin_default` | 后端 compose 的网络名 |
+| `NPM_REGISTRY` | 官方源 | 国内建议 `https://registry.npmmirror.com` |
+| `NODE_IMAGE` / `NGINX_IMAGE` | `node:26-alpine` / `nginx:1.30-alpine` | Node 26（Current，预计 2026-10 转 LTS；仅用于构建阶段）；nginx 1.30 为 stable 分支。拉不动时填**完整仓库地址**绕过失效的镜像加速器 |
+| `VITE_API_BASE_URL` | `/api/v1` | 保持相对路径；改成完整地址即等于方案 B（此时必须配 CORS） |
+
+不想用 compose、只想单容器跑也可以（不共享网络，改走宿主机端口）：
 
 ```bash
 docker build -t admin-web .
-docker run -d -p 8080:80 --name admin-web admin-web
+docker run -d --name admin-web -p 8080:80 \
+  --add-host=host.docker.internal:host-gateway \
+  -e API_UPSTREAM=http://host.docker.internal:8000 \
+  admin-web
 ```
 
 ### 8.5 部署检查清单
@@ -458,6 +506,13 @@ docker run -d -p 8080:80 --name admin-web admin-web
 - [ ] 使用 history 路由时，Nginx 已配置 `try_files ... /index.html`
 - [ ] 分离域名部署时，后端 `BACKEND_CORS_ORIGINS` 已包含前端域名
 - [ ] 通过浏览器控制台确认没有 CORS / 401 报错
+
+Docker 部署（方案 C）额外确认：
+
+- [ ] 前端仓库的 `Dockerfile` / `.dockerignore` / `nginx.conf` 已 push 到 GitHub
+- [ ] `.env` 的 `BACKEND_NETWORK` 与 `docker inspect admin-backend` 查到的网络名一致
+- [ ] `curl http://<服务器IP>:8080/api/v1/system/health` 能返回后端健康检查结果
+- [ ] `docker compose ps` 里 `admin-frontend` 为 `healthy`
 
 ---
 
@@ -473,3 +528,8 @@ docker run -d -p 8080:80 --name admin-web admin-web
 | 菜单里看不到「后台账号 / 用户管理 / 菜品管理」 | 这些一级菜单及其子项仅 `admin` 角色可见 |
 | 会员头像显示为字母圆块 | 该会员未上传头像（属于预期降级）；已上传却仍不显示时，检查 `/api/v1/static/` 是否被代理放行 |
 | 端口被占用 | `npm run dev -- --port 5174` 指定其他端口 |
+| Docker 里页面能打开但所有接口 502 | Nginx 代理不到后端：`API_UPSTREAM` 写错，或前端容器没和后端在同一网络。在容器内直接验证：`docker exec admin-frontend wget -qO- http://backend:8000/api/v1/system/health` |
+| 启动报 `network fastapi-admin_default declared as external, but could not be found` | 网络是后端 compose 创建的：后端还没起，或实际网络名不同。`docker inspect admin-backend --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{end}}'` 查到的名字填到 `.env` 的 `BACKEND_NETWORK` |
+| 前端容器反复重启 / 日志报 `host not found in upstream` | 容器启动时解析不到 `API_UPSTREAM`，nginx 会直接退出。确认后端服务名/容器名拼写，或改用 `http://host.docker.internal:8000`；`restart: unless-stopped` 会自动重试 |
+| 构建时 `npm ci` 超时 / `ECONNRESET` | 在 `.env` 里把 `NPM_REGISTRY` 改成国内源（如 `https://registry.npmmirror.com`）后重新构建 |
+| 构建报 `failed to resolve source metadata ... 403 / 401` | 与后端同理：Docker daemon 里配的加速器失效了。在 `.env` 里给 `NODE_IMAGE` / `NGINX_IMAGE` 填**完整仓库地址**（带域名即绕过加速器） |

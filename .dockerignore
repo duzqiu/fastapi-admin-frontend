@@ -1,0 +1,30 @@
+# 依赖与构建产物：容器里会重新安装 / 构建，不要拷进去
+node_modules/
+dist/
+dist-ssr/
+.vite/
+
+# 版本控制与编辑器
+.git/
+.gitignore
+.vscode/
+.idea/
+*.suo
+*.sw?
+.DS_Store
+
+# 本地个人配置：绝不能进镜像（会覆盖构建期注入的接口地址等配置）
+.env.local
+.env.*.local
+*.local
+
+# 日志
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# 部署文档与编排文件：镜像里用不到
+README.md
+docker-compose.yml
+.env.docker.example
