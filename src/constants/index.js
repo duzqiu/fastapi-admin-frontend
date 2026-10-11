@@ -31,6 +31,15 @@ export const ORDER_STATUS = [
   { value: 'cancelled', label: '已取消', tag: 'info' },
 ]
 
+/** 倒数日重复周期（与后端 CountdownCycle 一致） */
+export const COUNTDOWN_CYCLES = [
+  { value: 'once', label: '一次性', tag: 'info' },
+  { value: 'daily', label: '每天', tag: 'info' },
+  { value: 'weekly', label: '每周', tag: 'primary' },
+  { value: 'monthly', label: '每月', tag: 'success' },
+  { value: 'yearly', label: '每年', tag: 'warning' },
+]
+
 /** 标签可选颜色（对应 Element Plus 语义色） */
 export const TAG_COLORS = [
   { value: '', label: '默认' },
@@ -55,3 +64,6 @@ export const dishStatusTagType = (value) => findOption(DISH_STATUS, value)?.tag 
 
 export const orderStatusLabel = (value) => findOption(ORDER_STATUS, value)?.label || value
 export const orderStatusTagType = (value) => findOption(ORDER_STATUS, value)?.tag || 'info'
+
+export const countdownCycleLabel = (value) => findOption(COUNTDOWN_CYCLES, value)?.label || value
+export const countdownCycleTagType = (value) => findOption(COUNTDOWN_CYCLES, value)?.tag || 'info'

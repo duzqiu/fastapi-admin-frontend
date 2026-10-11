@@ -66,7 +66,7 @@
       <!-- 数据表 -->
       <el-table v-loading="loading" :data="rows" stripe row-key="id" empty-text="暂无会员数据">
         <!-- 除「会员」用 min-width 自适应外，其余列固定宽：保证表格始终填满容器、右侧不留白 -->
-        <el-table-column prop="id" label="内部ID" width="72" />
+        <el-table-column prop="id" label="ID" width="72" />
         <el-table-column label="用户ID" width="86" show-overflow-tooltip>
           <template #default="{ row }">
             <span class="member-no">{{ row.member_no || '-' }}</span>
@@ -648,7 +648,7 @@ onMounted(loadAll)
   font-weight: 600;
   letter-spacing: 0.4px;
   font-variant-numeric: tabular-nums;
-  color: var(--app-primary);
+  color: var(--app-text);
 }
 
 .member-cell {

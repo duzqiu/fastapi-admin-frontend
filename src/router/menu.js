@@ -74,6 +74,21 @@ const menuStructure = [
     ],
   },
   {
+    // 一级菜单：代办事项
+    key: 'todo',
+    title: '代办事项',
+    icon: 'Calendar',
+    roles: ['admin'],
+    children: [
+      {
+        path: '/countdowns',
+        name: 'Countdowns',
+        component: () => import('@/views/todo/countdown.vue'),
+        meta: { title: '倒数日', icon: 'AlarmClock', roles: ['admin'] },
+      },
+    ],
+  },
+  {
     path: '/profile',
     name: 'Profile',
     component: () => import('@/views/profile/index.vue'),
