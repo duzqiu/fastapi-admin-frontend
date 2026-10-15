@@ -33,7 +33,7 @@
 | 仪表盘 | 统计卡片（注册会员 / 近 7 天新增会员 / 后台账号） |
 | 后台账号（一级菜单） | 列表搜索分页、新建、编辑、启用/禁用、重置密码、删除 |
 | 用户管理（一级菜单） | 收纳「用户列表」子菜单 |
-| └ 用户列表 | 用户中心注册用户：统计概览、6 位用户 ID 展示与检索、列表筛选、详情抽屉、编辑资料（昵称/头像/性别/生日/手机号/简介）、启用/禁用、重置密码、删除 |
+| └ 用户列表 | 用户中心注册用户：统计概览、6 位用户 ID 展示与检索、列表筛选、详情抽屉、编辑资料（昵称/头像上传/**背景图上传**/性别/生日/手机号/地区/简介）、启用/禁用、重置密码、删除 |
 | 菜品管理（一级菜单） | 收纳「菜品列表 / 菜品分类 / 菜品标签 / 订单管理」四个子菜单，侧边栏可折叠展开 |
 | ├ 菜品列表 | 菜名/图片（可上传）/价格/库存/单位/状态、分类与标签、**套餐与售卖规则**（起购/限购/每日限量/供应时段）、库存调整、上架下架、销量与统计 |
 | ├ 菜品分类 | 分类 CRUD，展示每个分类下的菜品数；分类下仍有菜品时禁止删除 |
@@ -86,7 +86,7 @@ fastapi-admin-frontend/
     │   ├── request.js              Axios 实例：令牌注入、响应解包、错误提示、静默续期、失败重放
     │   ├── auth.js                 /auth/*     登录、当前用户、改密、登出
     │   ├── user.js                 /users/*    后台账号 CRUD、启禁用、重置密码
-    │   ├── member.js               /members/*  用户中心会员：列表、统计、详情、编辑、启禁用、重置密码
+    │   ├── member.js               /members/*  用户中心会员：列表、统计、详情、编辑、启禁用、重置密码、头像 / 背景图上传与按 ID 读取
     │   ├── dish.js                 /dishes/*   菜品 / 套餐 / 分类 / 标签 / 订单管理（点菜菜单）
     │   └── system.js               /system/*   健康检查、系统信息（接口封装）、首页统计
     │
@@ -243,11 +243,13 @@ npm run preview
 
 - **统计概览**：注册会员总数、启用中、近 7 天新增、邮箱已验证。
 - **列表**：内部ID（数据库主键）、**用户ID**（注册时生成的 6 位唯一编号）、会员（头像 / 昵称 / 邮箱）、
-  性别、生日、邮箱验证、状态开关、最后登录、注册时间。
+  性别、生日、**地区**、邮箱验证、状态开关、最后登录、注册时间。
 - **筛选**：关键词（**用户ID** / 邮箱 / 昵称 / 手机号，支持片段匹配）、性别、启用状态、邮箱验证状态。
-- **详情抽屉**：用户 ID、内部 ID、头像、昵称、邮箱、性别、生日、年龄、手机号、个人简介、
+- **详情抽屉**：用户 ID、内部 ID、头像、昵称、邮箱、性别、生日、年龄、手机号、**地区**、个人简介、
   邮箱验证时间、最后登录、注册时间、更新时间，并提供「编辑资料 / 禁用账号」快捷操作。
-- **编辑**：昵称、头像地址（带实时预览）、性别、生日（日期选择器）、手机号、简介、启用状态。
+- **编辑**：昵称、头像（**可直接上传**，也支持填图片地址，带实时预览）、**背景图**（同样可直接
+  上传，16:9 缩略图预览；没设置时显示「未设置」）、性别、生日（日期选择器）、手机号、**地区**、
+  简介、启用状态。
 - **启用 / 禁用**：表格内开关一键切换；禁用后该会员立即无法登录，已签发令牌同步失效。
 - **重置密码**：管理员直接设置新密码，无需邮箱验证码。
 - **删除**：二次确认后删除。
@@ -366,7 +368,7 @@ Authorization: Bearer <access_token>     # 登录后自动添加
 | 修改密码 | `POST /auth/change-password` |
 | 仪表盘 | `GET /system/dashboard` |
 | 用户管理（后台账号） | `GET/POST /users`、`PUT /users/{id}`、`PATCH /users/{id}/status`、`PATCH /users/{id}/password`、`DELETE /users/{id}` |
-| 用户列表（用户中心） | `GET /members`（`keyword` 支持用户ID / 邮箱 / 昵称 / 手机号）、`GET /members/stats`、`GET/PUT /members/{id}`、`PATCH /members/{id}/status`、`PATCH /members/{id}/password`、`DELETE /members/{id}` |
+| 用户列表（用户中心） | `GET /members`（`keyword` 支持用户ID / 邮箱 / 昵称 / 手机号）、`GET /members/stats`、`GET/PUT /members/{id}`、`POST /members/{id}/avatar`（上传头像）、`GET /members/{id}/avatar`（按会员 ID 读头像）、`POST /members/{id}/background`（上传背景图）、`GET /members/{id}/background`（按会员 ID 读背景图）、`PATCH /members/{id}/status`、`PATCH /members/{id}/password`、`DELETE /members/{id}` |
 | 菜品管理 | `GET/POST /dishes`、`GET/PUT/DELETE /dishes/{id}`、`PATCH /dishes/{id}/status`、`PATCH /dishes/{id}/stock`、`POST /dishes/upload-image`、`GET /dishes/stats` |
 | 套餐管理 | `GET/POST /dishes/{id}/specs`、`PUT/DELETE /dishes/{id}/specs/{spec_id}` |
 | 分类 / 标签 | `GET/POST /dish-categories`、`PUT/DELETE /dish-categories/{id}`、`GET/POST /dish-tags`（支持 `only_active`）、`PUT/DELETE /dish-tags/{id}` |
@@ -374,9 +376,14 @@ Authorization: Bearer <access_token>     # 登录后自动添加
 
 ### 会员头像的显示
 
-后端返回的头像地址形如 `/api/v1/static/avatars/xxx.png`，与接口同源（在 `/api` 前缀下），
-因此本地 Vite 代理和生产 Nginx 的 `/api` 反向代理都能直接访问，无需单独配置。
-未设置头像时，界面会退化为「昵称首字母 + 主题渐变」的圆形头像。
+- **已上传**：后端返回的头像地址形如 `/api/v1/static/avatars/{会员ID}/avatar_{会员ID}_{随机串}.png`，
+  与接口同源（在 `/api` 前缀下），因此本地 Vite 代理和生产 Nginx 的 `/api` 反向代理都能直接访问，
+  无需单独配置。
+- **未上传**：资料接口返回的 `avatar_url` 会自动变成系统默认头像地址；接口也不可用时，
+  界面退化为「昵称首字母 + 主题渐变」的圆形头像。
+  （后端会员侧已不再提供单独的「获取头像」接口，地址统一由资料接口的 `avatar_url` 给出。）
+- **上传**：编辑弹窗里的「上传头像」走 `POST /members/{会员ID}/avatar`（multipart，字段名 `file`），
+  后端按会员 ID 建目录存放（`data/uploads/avatars/{会员ID}/`），并自动把新地址写回会员头像字段。
 
 > 接口契约以后端 `http://<后端地址>/docs` 的 OpenAPI 文档为准。
 
@@ -545,7 +552,7 @@ Docker 部署（方案 C）额外确认：
 | 改了 `.env` 不生效 | 需重启 `npm run dev`；`.env` 在构建时被静态替换 |
 | 登录后一直跳回登录页 | 本地令牌已失效，清理浏览器 `localStorage` 中的 `admin_access_token` / `admin_refresh_token` 后重试 |
 | 菜单里看不到「后台账号 / 用户管理 / 菜品管理」 | 这些一级菜单及其子项仅 `admin` 角色可见 |
-| 会员头像显示为字母圆块 | 该会员未上传头像（属于预期降级）；已上传却仍不显示时，检查 `/api/v1/static/` 是否被代理放行 |
+| 会员头像显示为字母圆块 | 该会员未上传头像且默认头像也没取到（属于预期降级）；已上传却仍不显示时，检查 `/api/v1/static/` 是否被代理放行 |
 | 端口被占用 | `npm run dev -- --port 5174` 指定其他端口 |
 | Docker 里页面能打开但所有接口 502 | Nginx 代理不到后端：`API_UPSTREAM` 写错，或前端容器没和后端在同一网络。在容器内直接验证：`docker exec admin-frontend wget -qO- http://backend:8000/api/v1/system/health` |
 | 启动报 `network-scoped alias is supported only for containers in user defined networks` | 你把网络指向了 Docker 默认的 `bridge`。别名只能用在**用户自定义网络**上，而 Compose 必定会给容器加服务名 / 容器名别名。去掉 compose 里的 `networks` 声明（即接法 A，默认配置）即可；想共享后端网络就把 `BACKEND_NETWORK` 填成后端那个**用户自定义**网络名 |

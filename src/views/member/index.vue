@@ -76,7 +76,7 @@
         <el-table-column label="会员" min-width="190">
           <template #default="{ row }">
             <div class="member-cell">
-              <el-avatar :size="34" :src="row.avatar || undefined" class="member-cell__avatar">
+              <el-avatar :size="34" :src="avatarSrc(row)" class="member-cell__avatar">
                 {{ (row.nickname || row.email).charAt(0).toUpperCase() }}
               </el-avatar>
               <div class="member-cell__info">
@@ -97,6 +97,10 @@
 
         <el-table-column label="生日" width="104">
           <template #default="{ row }">{{ row.birthday || '-' }}</template>
+        </el-table-column>
+
+        <el-table-column label="地区" width="96" show-overflow-tooltip>
+          <template #default="{ row }">{{ row.region || '-' }}</template>
         </el-table-column>
 
         <el-table-column label="邮箱验证" width="86">
@@ -153,7 +157,7 @@
     <el-drawer v-model="detail.visible" title="会员详情" size="440px">
       <template v-if="detail.data">
         <div class="detail-head">
-          <el-avatar :size="72" :src="detail.data.avatar || undefined" class="detail-head__avatar">
+          <el-avatar :size="72" :src="avatarSrc(detail.data)" class="detail-head__avatar">
             {{ (detail.data.nickname || detail.data.email).charAt(0).toUpperCase() }}
           </el-avatar>
           <h3 class="detail-head__name">{{ detail.data.display_name }}</h3>
@@ -175,10 +179,20 @@
           <el-descriptions-item label="用户 ID">{{ detail.data.member_no || '-' }}</el-descriptions-item>
           <el-descriptions-item label="内部 ID">{{ detail.data.id }}</el-descriptions-item>
           <el-descriptions-item label="昵称">{{ detail.data.nickname || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="背景图">
+            <el-image
+              v-if="backgroundSrc(detail.data)"
+              :src="backgroundSrc(detail.data)"
+              fit="cover"
+              class="detail-background"
+            />
+            <span v-else>-</span>
+          </el-descriptions-item>
           <el-descriptions-item label="性别">{{ genderLabel(detail.data.gender) }}</el-descriptions-item>
           <el-descriptions-item label="生日">{{ detail.data.birthday || '-' }}</el-descriptions-item>
           <el-descriptions-item label="年龄">{{ detail.data.age ?? '-' }}</el-descriptions-item>
           <el-descriptions-item label="手机号">{{ detail.data.phone || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="地区">{{ detail.data.region || '-' }}</el-descriptions-item>
           <el-descriptions-item label="个人简介">{{ detail.data.bio || '-' }}</el-descriptions-item>
           <el-descriptions-item label="邮箱验证时间">
             {{ formatDateTime(detail.data.email_verified_at) }}
@@ -226,10 +240,56 @@
 
         <el-form-item label="头像">
           <div class="avatar-editor">
-            <el-avatar :size="52" :src="form.avatar || undefined">
+            <el-avatar :size="52" :src="avatarSrc(form)">
               {{ (form.nickname || form.email || 'M').charAt(0).toUpperCase() }}
             </el-avatar>
-            <el-input v-model="form.avatar" placeholder="头像图片地址（可留空）" clearable />
+            <div class="avatar-editor__body">
+              <el-input v-model="form.avatar" placeholder="头像图片地址（可留空）" clearable />
+              <div class="avatar-editor__actions">
+                <el-upload
+                  :show-file-list="false"
+                  :before-upload="handleAvatarUpload"
+                  accept="image/*"
+                  class="upload-inline"
+                >
+                  <el-button size="small" :loading="uploading">
+                    <el-icon><Upload /></el-icon> 上传头像
+                  </el-button>
+                </el-upload>
+                <span class="avatar-editor__hint">支持 jpg / png / webp / gif，≤ 5MB</span>
+              </div>
+            </div>
+          </div>
+        </el-form-item>
+
+        <!-- 背景图：与头像同一套规则（按会员 ID 存 backgrounds/{会员ID}/），只是没有默认图 -->
+        <el-form-item label="背景图">
+          <div class="avatar-editor">
+            <div class="background-preview">
+              <el-image
+                v-if="backgroundSrc(form)"
+                :src="backgroundSrc(form)"
+                fit="cover"
+                class="background-preview__img"
+              />
+              <span v-else class="background-preview__empty">未设置</span>
+            </div>
+            <div class="avatar-editor__body">
+              <el-input v-model="form.background" placeholder="背景图地址（可留空）" clearable />
+              <div class="avatar-editor__actions">
+                <el-upload
+                  :show-file-list="false"
+                  :before-upload="handleBackgroundUpload"
+                  accept="image/*"
+                  class="upload-inline"
+                >
+                  <el-button size="small" :loading="bgUploading">
+                    <el-icon><Upload /></el-icon> 上传背景图
+                  </el-button>
+                </el-upload>
+                <span class="avatar-editor__hint">支持 jpg / png / webp / gif，≤ 5MB</span>
+              </div>
+            </div>
           </div>
         </el-form-item>
 
@@ -259,9 +319,18 @@
           </el-col>
         </el-row>
 
-        <el-form-item label="手机号" prop="phone">
-          <el-input v-model="form.phone" maxlength="20" placeholder="选填，仅数字" />
-        </el-form-item>
+        <el-row :gutter="12">
+          <el-col :span="12">
+            <el-form-item label="手机号" prop="phone">
+              <el-input v-model="form.phone" maxlength="20" placeholder="选填，仅数字" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="地区" prop="region">
+              <el-input v-model="form.region" maxlength="64" placeholder="选填，如：杭州" clearable />
+            </el-form-item>
+          </el-col>
+        </el-row>
 
         <el-form-item label="简介" prop="bio">
           <el-input
@@ -318,9 +387,12 @@ import {
   fetchMember,
   fetchMemberStats,
   fetchMembers,
+  memberAvatarUrl,
   resetMemberPassword,
   updateMember,
   updateMemberStatus,
+  uploadMemberAvatar,
+  uploadMemberBackground,
 } from '@/api/member'
 import PageHeader from '@/components/PageHeader.vue'
 import { MEMBER_GENDERS, genderLabel, genderTagType } from '@/constants'
@@ -328,6 +400,8 @@ import { formatDateTime, formatNumber } from '@/utils/format'
 
 const loading = ref(false)
 const submitting = ref(false)
+const uploading = ref(false)
+const bgUploading = ref(false)
 const statusLoadingId = ref(null)
 
 const rows = ref([])
@@ -354,13 +428,35 @@ const defaultForm = () => ({
   email: '',
   nickname: '',
   avatar: '',
+  avatar_url: '',
+  background: '',
+  background_url: '',
   gender: 'unknown',
   birthday: null,
   phone: '',
+  region: '',
   bio: '',
   is_active: true,
 })
 const form = reactive(defaultForm())
+
+/**
+ * 头像展示地址：优先用资料接口给出的 `avatar_url`（后端按会员 ID 解析，未上传时是默认
+ * 头像），其次是会员自己设置的头像地址，最后兜底走后台「按会员 ID 读头像」接口。
+ */
+function avatarSrc(row) {
+  if (!row) return undefined
+  return row.avatar_url || row.avatar || memberAvatarUrl(row.id) || undefined
+}
+
+/**
+ * 背景图展示地址。**背景没有默认图**：没设置过就返回空串，页面摆「未设置」，
+ * 别去调「按会员 ID 读背景图」那个接口（它会 404）。
+ */
+function backgroundSrc(row) {
+  if (!row) return ''
+  return row.background_url || row.background || ''
+}
 
 const cards = computed(() => [
   {
@@ -489,9 +585,13 @@ function openEdit(row, fromDetail = false) {
     email: row.email,
     nickname: row.nickname || '',
     avatar: row.avatar || '',
+    avatar_url: row.avatar_url || '',
+    background: row.background || '',
+    background_url: row.background_url || '',
     gender: row.gender || 'unknown',
     birthday: row.birthday || null,
     phone: row.phone || '',
+    region: row.region || '',
     bio: row.bio || '',
     is_active: row.is_active,
   })
@@ -508,6 +608,52 @@ async function openDetail(row) {
   }
 }
 
+async function handleAvatarUpload(file) {
+  if (!form.id) return false
+
+  if (file.size > 5 * 1024 * 1024) {
+    ElMessage.error('图片大小不能超过 5MB')
+    return false
+  }
+
+  uploading.value = true
+  try {
+    // 后端按会员 ID 存：data/uploads/avatars/{会员ID}/，返回的地址直接写回头像字段
+    const data = await uploadMemberAvatar(form.id, file)
+    form.avatar = data.url
+    form.avatar_url = data.url
+    ElMessage.success('头像上传成功')
+  } catch (error) {
+    // 拦截器已提示
+  } finally {
+    uploading.value = false
+  }
+  return false // 阻止组件自带的上传行为
+}
+
+async function handleBackgroundUpload(file) {
+  if (!form.id) return false
+
+  if (file.size > 5 * 1024 * 1024) {
+    ElMessage.error('图片大小不能超过 5MB')
+    return false
+  }
+
+  bgUploading.value = true
+  try {
+    // 与头像同一套规则：data/uploads/backgrounds/{会员ID}/
+    const data = await uploadMemberBackground(form.id, file)
+    form.background = data.url
+    form.background_url = data.url
+    ElMessage.success('背景图上传成功')
+  } catch (error) {
+    // 拦截器已提示
+  } finally {
+    bgUploading.value = false
+  }
+  return false // 阻止组件自带的上传行为
+}
+
 async function handleSubmit() {
   try {
     await formRef.value.validate()
@@ -520,9 +666,11 @@ async function handleSubmit() {
     await updateMember(form.id, {
       nickname: form.nickname,
       avatar: form.avatar,
+      background: form.background,
       gender: form.gender,
       birthday: form.birthday || null,
       phone: form.phone,
+      region: form.region,
       bio: form.bio,
       is_active: form.is_active,
     })
@@ -739,5 +887,59 @@ onMounted(loadAll)
     color: #fff;
     flex-shrink: 0;
   }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  &__hint {
+    font-size: 12px;
+    color: var(--app-text-placeholder);
+  }
+}
+
+.upload-inline {
+  :deep(.el-upload) {
+    display: inline-block;
+  }
+}
+
+/* 背景图预览：16:9 的小缩略图，没设置时摆「未设置」 */
+.background-preview {
+  flex-shrink: 0;
+  width: 96px;
+  height: 54px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--app-fill-lighter, #f5f7fa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &__img {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  &__empty {
+    font-size: 12px;
+    color: var(--app-text-placeholder);
+  }
+}
+
+.detail-background {
+  width: 120px;
+  height: 68px;
+  border-radius: 6px;
+  display: block;
 }
 </style>
