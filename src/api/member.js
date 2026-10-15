@@ -61,7 +61,7 @@ export function deleteMember(id) {
 /**
  * 后台代会员上传头像（multipart，字段名 file）
  * @param {number} id 会员 ID
- * @param {File} file 图片文件（jpg/jpeg/png/webp/gif，≤ 5MB）
+ * @param {File} file 图片文件（jpg/jpeg/png/webp/gif/heic/heif，≤ 5MB）
  * @returns {Promise<{ url: string, filename: string, size: number }>}
  */
 export function uploadMemberAvatar(id, file) {
@@ -89,7 +89,7 @@ export function memberAvatarUrl(id, version = '') {
 /**
  * 后台代会员上传背景图（multipart，字段名 file）
  * @param {number} id 会员 ID
- * @param {File} file 图片文件（jpg/jpeg/png/webp/gif，≤ 5MB）
+ * @param {File} file 图片文件（jpg/jpeg/png/webp/gif/heic/heif，≤ 5MB）
  * @returns {Promise<{ url: string, filename: string, size: number }>}
  */
 export function uploadMemberBackground(id, file) {

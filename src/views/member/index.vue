@@ -256,7 +256,7 @@
                     <el-icon><Upload /></el-icon> 上传头像
                   </el-button>
                 </el-upload>
-                <span class="avatar-editor__hint">支持 jpg / png / webp / gif，≤ 5MB</span>
+                <span class="avatar-editor__hint">支持 jpg / png / webp / gif / heic，≤ 5MB</span>
               </div>
             </div>
           </div>
@@ -287,7 +287,7 @@
                     <el-icon><Upload /></el-icon> 上传背景图
                   </el-button>
                 </el-upload>
-                <span class="avatar-editor__hint">支持 jpg / png / webp / gif，≤ 5MB</span>
+                <span class="avatar-editor__hint">支持 jpg / png / webp / gif / heic，≤ 5MB</span>
               </div>
             </div>
           </div>
