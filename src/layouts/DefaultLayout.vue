@@ -3,7 +3,6 @@
     <!-- 侧边栏 -->
     <aside class="layout__aside">
       <div class="brand">
-        <div class="brand__logo">后</div>
         <transition name="fade">
           <span v-show="!appStore.sidebarCollapsed" class="brand__name">
             {{ appStore.projectName }}
@@ -95,6 +94,11 @@
           </transition>
         </router-view>
       </main>
+
+      <!-- 监管信息：常驻页面最底部，不随内容滚动 -->
+      <div class="layout__footer">
+        <PageFooter />
+      </div>
     </div>
   </div>
 </template>
@@ -104,6 +108,7 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
+import PageFooter from '@/components/PageFooter.vue'
 import { findParentTitle, menuTree } from '@/router/menu'
 import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
@@ -198,6 +203,32 @@ async function onCommand(command) {
   &__menu {
     border-right: none;
 
+    /* 折叠态：EP 把菜单写死成 64px（24px 图标 + 20px 内边距 ×2），
+       而菜单外层 __menu-wrap 还有 8px 内边距，可用宽度只有 48px，
+       于是溢出 16px —— 高亮块右半边被裁掉（右侧圆角消失）。
+       所以先让它填满可用宽度。 */
+    &.el-menu--collapse {
+      width: 100%;
+
+      /* 宽度不再是 64px 后，EP 那套「靠左右各 20px 内边距凑出居中」就失准了，
+         所以这里显式做内容居中。两类行的内部结构不同，都要覆盖：
+         - el-sub-menu__title：图标/文字是直接子元素，靠 justify-content 居中；
+         - el-menu-item：内容被包进一层绝对定位的 .el-menu-tooltip__trigger
+           （它自带 padding: 0 var(--el-menu-base-level-padding)=20px），
+           给 item 设 justify-content 对它无效，必须落到那一层上。 */
+      :deep(> .el-menu-item),
+      :deep(> .el-sub-menu > .el-sub-menu__title) {
+        padding: 0 !important;
+        justify-content: center;
+      }
+
+      :deep(> .el-menu-item > .el-menu-tooltip__trigger),
+      :deep(> .el-sub-menu > .el-sub-menu__title > .el-menu-tooltip__trigger) {
+        padding: 0;
+        justify-content: center;
+      }
+    }
+
     :deep(.el-menu-item),
     :deep(.el-sub-menu__title) {
       height: 44px;
@@ -268,6 +299,15 @@ async function onCommand(command) {
     overflow-y: auto;
     padding: 0;
   }
+
+  // 监管信息常驻底部：放在 __main 之外，flex-shrink: 0 保证不被挤掉，
+  // 做成底栏样式（上边框 + 底色）与 __header 呼应
+  &__footer {
+    flex-shrink: 0;
+    padding: 10px 20px;
+    background: var(--app-surface);
+    border-top: 1px solid var(--app-border);
+  }
 }
 
 .brand {
@@ -278,19 +318,6 @@ async function onCommand(command) {
   padding: 0 16px;
   flex-shrink: 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-
-  &__logo {
-    display: grid;
-    place-items: center;
-    width: 32px;
-    height: 32px;
-    flex-shrink: 0;
-    border-radius: 9px;
-    background: linear-gradient(135deg, var(--app-primary-light), #22d3ee);
-    color: #fff;
-    font-weight: 700;
-    font-size: 16px;
-  }
 
   &__name {
     color: #fff;

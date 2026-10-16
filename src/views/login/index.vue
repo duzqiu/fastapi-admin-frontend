@@ -1,29 +1,6 @@
 <template>
   <div class="login">
-    <!-- 左侧品牌区 -->
-    <div class="login__banner">
-      <div class="login__banner-inner">
-        <div class="login__logo">后</div>
-        <h1>{{ APP_NAME }}</h1>
-
-        <!-- 后台已有功能简介 -->
-        <div class="login__intro">
-          <ul class="login__intro-list">
-            <li v-for="item in MODULES" :key="item.name">
-              <span class="login__intro-icon">
-                <el-icon><component :is="item.icon" /></el-icon>
-              </span>
-              <span class="login__intro-name">{{ item.name }}</span>
-              <span class="login__intro-desc">{{ item.desc }}</span>
-            </li>
-          </ul>
-        </div>
-      </div>
-      <div class="login__glow login__glow--1" />
-      <div class="login__glow login__glow--2" />
-    </div>
-
-    <!-- 右侧表单区 -->
+    <!-- 登录表单：整页居中 -->
     <div class="login__form">
       <div class="login__form-inner">
         <h2>欢迎回来 👋</h2>
@@ -78,6 +55,9 @@
         </p>
       </div>
     </div>
+
+    <!-- 底部监管信息（版权 + 备案号） -->
+    <PageFooter />
   </div>
 </template>
 
@@ -86,17 +66,10 @@ import { onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
-import { APP_NAME } from '@/constants'
+import PageFooter from '@/components/PageFooter.vue'
 import { useUserStore } from '@/stores/user'
 
 const REMEMBER_KEY = 'admin_remember_username'
-
-/** 后台已有功能模块 */
-const MODULES = [
-  { icon: 'Avatar', name: '用户列表', desc: '注册用户资料与状态' },
-  { icon: 'Bowl', name: '菜品管理', desc: '菜品、套餐与订单' },
-  { icon: 'Setting', name: '个人中心', desc: '账号信息与密码修改' },
-]
 
 const route = useRoute()
 const router = useRouter()
@@ -160,131 +133,26 @@ onMounted(() => {
 <style scoped lang="scss">
 .login {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   min-height: 100vh;
+  padding: 40px 24px;
+  background: var(--app-surface);
 
-  &__banner {
-    position: relative;
-    flex: 1.1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 45%, #4338ca 100%);
-    color: #fff;
-  }
-
-  &__banner-inner {
-    position: relative;
-    z-index: 2;
-    max-width: 420px;
-    padding: 40px;
-
-    h1 {
-      margin: 18px 0 0;
-      font-size: 32px;
-      letter-spacing: 0.5px;
-    }
-  }
-
-  &__logo {
-    display: grid;
-    place-items: center;
-    width: 56px;
-    height: 56px;
-    border-radius: 16px;
-    background: linear-gradient(135deg, #6366f1, #22d3ee);
-    color: #fff;
-    font-size: 28px;
-    font-weight: 700;
-    box-shadow: 0 12px 28px rgba(99, 102, 241, 0.45);
-  }
-
-  &__intro {
-    margin-top: 26px;
-  }
-
-  &__intro-list {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-
-    li {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 7px 10px;
-      border-radius: 10px;
-      transition: background 0.2s ease;
-
-      &:hover {
-        background: rgba(255, 255, 255, 0.07);
-      }
-    }
-  }
-
-  &__intro-icon {
-    display: grid;
-    place-items: center;
-    width: 26px;
-    height: 26px;
-    flex-shrink: 0;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.12);
-    color: #c7d2fe;
-    font-size: 14px;
-  }
-
-  &__intro-name {
-    width: 66px;
-    flex-shrink: 0;
-    font-size: 13px;
-    font-weight: 600;
-    color: #fff;
-  }
-
-  &__intro-desc {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.62);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  &__glow {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(10px);
-    opacity: 0.5;
-
-    &--1 {
-      width: 320px;
-      height: 320px;
-      right: -90px;
-      top: -80px;
-      background: radial-gradient(circle, rgba(34, 211, 238, 0.55), transparent 65%);
-    }
-
-    &--2 {
-      width: 380px;
-      height: 380px;
-      left: -120px;
-      bottom: -140px;
-      background: radial-gradient(circle, rgba(129, 140, 248, 0.5), transparent 65%);
-    }
-  }
-
+  // 加边框示意登录区的范围；内边距让边框不贴着表单控件
   &__form {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 24px;
-    background: var(--app-surface);
+    width: 100%;
+    // 全局是 border-box，416 = 360（原来的表单控件宽度）+ 28*2 内边距
+    max-width: 416px;
+    padding: 32px 28px;
+    border: 1px solid var(--app-border);
+    border-radius: var(--app-radius);
+    // 上下 auto 吸掉剩余空间：表单在「顶部 ~ 底部监管信息」之间垂直居中，footer 自然贴底
+    margin: auto;
   }
 
   &__form-inner {
     width: 100%;
-    max-width: 360px;
 
     h2 {
       margin: 0 0 6px;
@@ -332,11 +200,6 @@ onMounted(() => {
       color: var(--app-primary);
     }
   }
-}
 
-@media (max-width: 860px) {
-  .login__banner {
-    display: none;
-  }
 }
 </style>

@@ -3,6 +3,25 @@
 /** 系统显示名称（侧边栏、浏览器标题、登录页统一使用此常量） */
 export const APP_NAME = '后台管理系统'
 
+/**
+ * 底部监管信息（版权 + 备案号）
+ *
+ * ⚠️ 目前是**假数据**：每条都带 `-demo` 后缀，方便上线前全局搜索替换成真实信息。
+ * 替换时注意备案号里的省份简称（京/沪/粤…）要与实际备案地一致。
+ */
+export const SITE_LEGAL = {
+  /** 版权行；主体建议改成备案的公司全称 */
+  copyright: `© ${new Date().getFullYear()} ${APP_NAME} 版权所有-demo`,
+  icp: {
+    label: '京ICP备00000000号-1-demo',
+    link: 'https://beian.miit.gov.cn/',
+  },
+  police: {
+    label: '京公网安备 00000000000000号-demo',
+    link: 'https://beian.mps.gov.cn/',
+  },
+}
+
 export const USER_ROLES = [
   { value: 'admin', label: '管理员', tag: 'danger' },
   { value: 'editor', label: '编辑', tag: 'warning' },
@@ -40,6 +59,22 @@ export const COUNTDOWN_CYCLES = [
   { value: 'yearly', label: '每年', tag: 'warning' },
 ]
 
+/** 个人简历·性别（与后端 ResumeGender 一致，独立于会员性别） */
+export const RESUME_GENDERS = [
+  { value: 'male', label: '男', tag: 'primary' },
+  { value: 'female', label: '女', tag: 'danger' },
+  { value: 'secret', label: '保密', tag: 'info' },
+]
+
+/** 个人简历·学历（与后端 EducationDegree 一致） */
+export const EDUCATION_DEGREES = [
+  { value: 'high_school', label: '高中及以下', tag: 'info' },
+  { value: 'college', label: '大专', tag: 'info' },
+  { value: 'bachelor', label: '本科', tag: 'primary' },
+  { value: 'master', label: '硕士', tag: 'success' },
+  { value: 'doctor', label: '博士', tag: 'warning' },
+]
+
 /** 标签可选颜色（对应 Element Plus 语义色） */
 export const TAG_COLORS = [
   { value: '', label: '默认' },
@@ -67,3 +102,11 @@ export const orderStatusTagType = (value) => findOption(ORDER_STATUS, value)?.ta
 
 export const countdownCycleLabel = (value) => findOption(COUNTDOWN_CYCLES, value)?.label || value
 export const countdownCycleTagType = (value) => findOption(COUNTDOWN_CYCLES, value)?.tag || 'info'
+
+export const resumeGenderLabel = (value) => findOption(RESUME_GENDERS, value)?.label || '保密'
+export const resumeGenderTagType = (value) => findOption(RESUME_GENDERS, value)?.tag || 'info'
+
+export const educationDegreeLabel = (value) =>
+  findOption(EDUCATION_DEGREES, value)?.label || value
+export const educationDegreeTagType = (value) =>
+  findOption(EDUCATION_DEGREES, value)?.tag || 'info'

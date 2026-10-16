@@ -89,6 +89,45 @@ const menuStructure = [
     ],
   },
   {
+    // 一级菜单：个人简历（独立类目，四块数据各自一页）
+    key: 'resume',
+    title: '个人简历',
+    icon: 'Notebook',
+    roles: ['admin'],
+    children: [
+      {
+        path: '/resume-personal',
+        name: 'ResumePersonal',
+        component: () => import('@/views/resume/profile.vue'),
+        meta: { title: '个人信息', icon: 'User', roles: ['admin'] },
+      },
+      {
+        path: '/resume-education',
+        name: 'ResumeEducation',
+        component: () => import('@/views/resume/education.vue'),
+        meta: { title: '教育信息', icon: 'School', roles: ['admin'] },
+      },
+      {
+        path: '/resume-experience',
+        name: 'ResumeExperience',
+        component: () => import('@/views/resume/experience.vue'),
+        meta: { title: '工作经历', icon: 'Suitcase', roles: ['admin'] },
+      },
+      {
+        path: '/resume-project',
+        name: 'ResumeProject',
+        component: () => import('@/views/resume/project.vue'),
+        meta: { title: '项目经历', icon: 'Folder', roles: ['admin'] },
+      },
+      {
+        path: '/resume-evaluation',
+        name: 'ResumeEvaluation',
+        component: () => import('@/views/resume/evaluation.vue'),
+        meta: { title: '自我评价', icon: 'ChatLineSquare', roles: ['admin'] },
+      },
+    ],
+  },
+  {
     path: '/profile',
     name: 'Profile',
     component: () => import('@/views/profile/index.vue'),
