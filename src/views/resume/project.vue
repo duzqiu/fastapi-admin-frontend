@@ -12,7 +12,7 @@
         <div class="toolbar__filters">
           <el-input
             v-model="query.keyword"
-            placeholder="项目名称 / 角色 / 描述"
+            placeholder="项目名称 / 角色 / 职责 / 业绩"
             clearable
             style="width: 220px"
             @keyup.enter="handleSearch"
@@ -151,8 +151,24 @@
           <el-input
             v-model="form.description"
             type="textarea"
-            :rows="4"
-            placeholder="选填，项目背景 / 职责 / 业绩"
+            :rows="3"
+            placeholder="选填，项目背景 / 目标"
+          />
+        </el-form-item>
+        <el-form-item label="项目职责">
+          <el-input
+            v-model="form.duty"
+            type="textarea"
+            :rows="3"
+            placeholder="选填，负责哪些模块、做了哪些事"
+          />
+        </el-form-item>
+        <el-form-item label="项目业绩">
+          <el-input
+            v-model="form.achievement"
+            type="textarea"
+            :rows="3"
+            placeholder="选填，产出的指标与结果，如：回归耗时从 2 天降到 40 分钟"
           />
         </el-form-item>
         <el-form-item label="是否启用">
@@ -220,6 +236,8 @@ const defaultForm = () => ({
   start_month: '',
   end_month: '',
   description: '',
+  duty: '',
+  achievement: '',
   is_active: true,
   sort: 0,
 })
@@ -316,6 +334,8 @@ function openEdit(row) {
     start_month: row.start_month || '',
     end_month: row.end_month || '',
     description: row.description || '',
+    duty: row.duty || '',
+    achievement: row.achievement || '',
     is_active: row.is_active,
     sort: row.sort || 0,
   })
@@ -352,6 +372,8 @@ async function handleSubmit() {
     start_month: form.start_month || '',
     end_month: form.end_month || '',
     description: form.description || '',
+    duty: form.duty || '',
+    achievement: form.achievement || '',
     is_active: form.is_active,
     sort: form.sort,
   }

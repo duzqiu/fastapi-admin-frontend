@@ -89,7 +89,7 @@ const menuStructure = [
     ],
   },
   {
-    // 一级菜单：个人简历（独立类目，四块数据各自一页）
+    // 一级菜单：个人简历（独立类目，六块数据各自一页）
     key: 'resume',
     title: '个人简历',
     icon: 'Notebook',
@@ -100,6 +100,13 @@ const menuStructure = [
         name: 'ResumePersonal',
         component: () => import('@/views/resume/profile.vue'),
         meta: { title: '个人信息', icon: 'User', roles: ['admin'] },
+      },
+      {
+        // 「个人简介」下面紧跟技能标签：分类 + 多个标签
+        path: '/resume-skill',
+        name: 'ResumeSkill',
+        component: () => import('@/views/resume/skill.vue'),
+        meta: { title: '技能标签', icon: 'PriceTag', roles: ['admin'] },
       },
       {
         path: '/resume-education',

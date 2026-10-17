@@ -2,10 +2,10 @@
  *
  * 独立类目，后端收在 `/resume` 前缀下，分两套：
  *
- * 1. **管理端**（需登录）：个人信息 / 教育信息 / 工作经历 / 项目经历 / 自我评价，
- *    五组形状完全一致：分页列表、详情、新增、更新、删除、启停。
+ * 1. **管理端**（需登录）：个人信息 / 教育信息 / 工作经历 / 项目经历 / 自我评价 / 技能标签，
+ *    六组形状完全一致：分页列表、详情、新增、更新、删除、启停。
  * 2. **对外接口**（`/resume/public/profiles`，无需登录）：给前台展示端取数用。
- *    对外只有一个**合并接口**，一次返回某个人的整份简历（见文件末尾）。
+ *    对外只有一个**合并接口**，一次返回某个人的整份简历（含技能标签，见文件末尾）。
  */
 
 import request from './request'
@@ -133,6 +133,33 @@ export function deleteEvaluation(id) {
   return request.delete(`${BASE}/evaluations/${id}`)
 }
 
+// ------------------------- 技能标签 -------------------------
+// 一条 = 某个人的一组技能：category（标签分类）+ tags（多个标签，分号分隔）
+export function fetchSkillTags(params) {
+  return request.get(`${BASE}/skill-tags`, { params })
+}
+
+export function fetchSkillTag(id) {
+  return request.get(`${BASE}/skill-tags/${id}`)
+}
+
+/**
+ * 新增技能标签
+ * @param {{ personal_info_id: number, category: string, tags: string, is_active?: boolean, sort?: number }} data
+ *        tags 传字符串即可，多个标签用分号分隔（中英文分号、逗号都认），后端会去重规整
+ */
+export function createSkillTag(data) {
+  return request.post(`${BASE}/skill-tags`, data)
+}
+
+export function updateSkillTag(id, data) {
+  return request.put(`${BASE}/skill-tags/${id}`, data)
+}
+
+export function deleteSkillTag(id) {
+  return request.delete(`${BASE}/skill-tags/${id}`)
+}
+
 // ------------------------- 启用 / 停用 -------------------------
 // 五组接口形状一致：PATCH <集合>/{id}/status，body 为 { is_active }
 export function updatePersonalInfoStatus(id, isActive) {
@@ -153,6 +180,10 @@ export function updateProjectStatus(id, isActive) {
 
 export function updateEvaluationStatus(id, isActive) {
   return request.patch(`${BASE}/evaluations/${id}/status`, { is_active: isActive })
+}
+
+export function updateSkillTagStatus(id, isActive) {
+  return request.patch(`${BASE}/skill-tags/${id}/status`, { is_active: isActive })
 }
 
 // ------------------------- 对外接口（前台展示端用，无需登录） -------------------------

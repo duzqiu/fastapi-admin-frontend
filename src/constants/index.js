@@ -66,6 +66,14 @@ export const RESUME_GENDERS = [
   { value: 'secret', label: '保密', tag: 'info' },
 ]
 
+/** 个人简历·目前状态（与后端 ResumeCurrentStatus 一致） */
+export const RESUME_CURRENT_STATUSES = [
+  { value: 'resigned', label: '已离职-随时到岗', tag: 'success' },
+  { value: 'left', label: '已离职-月内到岗', tag: 'primary' },
+  { value: 'employed_open', label: '在职-考虑机会', tag: 'warning' },
+  { value: 'employed_closed', label: '在职-暂不考虑', tag: 'info' },
+]
+
 /** 个人简历·学历（与后端 EducationDegree 一致） */
 export const EDUCATION_DEGREES = [
   { value: 'high_school', label: '高中及以下', tag: 'info' },
@@ -105,6 +113,11 @@ export const countdownCycleTagType = (value) => findOption(COUNTDOWN_CYCLES, val
 
 export const resumeGenderLabel = (value) => findOption(RESUME_GENDERS, value)?.label || '保密'
 export const resumeGenderTagType = (value) => findOption(RESUME_GENDERS, value)?.tag || 'info'
+
+export const resumeCurrentStatusLabel = (value) =>
+  findOption(RESUME_CURRENT_STATUSES, value)?.label || ''
+export const resumeCurrentStatusTagType = (value) =>
+  findOption(RESUME_CURRENT_STATUSES, value)?.tag || 'info'
 
 export const educationDegreeLabel = (value) =>
   findOption(EDUCATION_DEGREES, value)?.label || value

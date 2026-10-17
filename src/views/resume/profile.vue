@@ -77,6 +77,17 @@
         <el-table-column prop="email" label="邮箱" min-width="190" show-overflow-tooltip />
         <el-table-column prop="city" label="现居城市" width="120" show-overflow-tooltip />
         <el-table-column prop="job_intention" label="求职意向" min-width="150" show-overflow-tooltip />
+        <el-table-column label="目前状态" width="150">
+          <template #default="{ row }">
+            <el-tag
+              :type="resumeCurrentStatusTagType(row.current_status)"
+              size="small"
+              effect="light"
+            >
+              {{ row.current_status_text || resumeCurrentStatusLabel(row.current_status) }}
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="sort" label="排序" width="80" />
         <el-table-column label="是否启用" width="110">
           <template #default="{ row }">
@@ -178,6 +189,16 @@
         <el-form-item label="求职意向">
           <el-input v-model="form.job_intention" placeholder="选填，如：后端工程师" />
         </el-form-item>
+        <el-form-item label="目前状态" prop="current_status">
+          <el-select v-model="form.current_status" style="width: 100%">
+            <el-option
+              v-for="item in RESUME_CURRENT_STATUSES"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item label="个人主页">
           <el-input v-model="form.website" placeholder="选填，作品集 / 博客地址" />
         </el-form-item>
@@ -214,7 +235,14 @@ import {
   uploadResumeAvatar,
 } from '@/api/resume'
 import PageHeader from '@/components/PageHeader.vue'
-import { RESUME_GENDERS, resumeGenderLabel, resumeGenderTagType } from '@/constants'
+import {
+  RESUME_CURRENT_STATUSES,
+  RESUME_GENDERS,
+  resumeCurrentStatusLabel,
+  resumeCurrentStatusTagType,
+  resumeGenderLabel,
+  resumeGenderTagType,
+} from '@/constants'
 import { formatDateTime } from '@/utils/format'
 
 const loading = ref(false)
@@ -247,6 +275,7 @@ const defaultForm = () => ({
   email: '',
   city: '',
   job_intention: '',
+  current_status: 'employed_open',
   website: '',
   remark: '',
   is_active: true,
@@ -328,6 +357,7 @@ function openEdit(row) {
     email: row.email || '',
     city: row.city || '',
     job_intention: row.job_intention || '',
+    current_status: row.current_status || 'employed_open',
     website: row.website || '',
     remark: row.remark || '',
     is_active: row.is_active,
@@ -367,6 +397,7 @@ async function handleSubmit() {
     email: form.email || '',
     city: form.city || '',
     job_intention: form.job_intention || '',
+    current_status: form.current_status,
     website: form.website || '',
     remark: form.remark || '',
     is_active: form.is_active,
