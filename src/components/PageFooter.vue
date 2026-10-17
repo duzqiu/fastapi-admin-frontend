@@ -5,7 +5,7 @@
       <a :href="SITE_LEGAL.icp.link" target="_blank" rel="noopener noreferrer">
         {{ SITE_LEGAL.icp.label }}
       </a>
-      <span class="page-footer__sep">|</span>
+      <span class="page-footer__sep">·</span>
       <a :href="SITE_LEGAL.police.link" target="_blank" rel="noopener noreferrer">
         {{ SITE_LEGAL.police.label }}
       </a>
@@ -25,11 +25,15 @@ import { SITE_LEGAL } from '@/constants'
 
 <style scoped lang="scss">
 .page-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 10px;
   width: 100%;
-  text-align: center;
-  font-size: 12px;
-  line-height: 1.9;
-  color: var(--app-text-placeholder);
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: color-mix(in srgb, var(--ink-faint) 82%, transparent);
 
   p {
     margin: 0;
@@ -38,16 +42,16 @@ import { SITE_LEGAL } from '@/constants'
   a {
     color: inherit;
     text-decoration: none;
+    transition: color 0.2s ease;
 
     &:hover {
-      color: var(--app-primary);
-      text-decoration: underline;
+      color: var(--ink-soft);
     }
   }
 
   &__sep {
-    margin: 0 8px;
-    color: var(--app-border);
+    margin: 0 2px;
+    color: var(--ink-faint);
   }
 }
 </style>

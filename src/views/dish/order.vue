@@ -240,10 +240,10 @@ const detail = reactive({ visible: false, data: null })
 const query = reactive({ page: 1, page_size: 10, keyword: '', status: '' })
 
 const cards = computed(() => [
-  { key: 'total', label: '订单总数', value: stats.value.total, icon: 'Tickets', color: '#4f46e5', bg: 'rgba(79, 70, 229, 0.12)' },
-  { key: 'pending', label: '待接单', value: stats.value.pending, icon: 'Bell', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.14)' },
-  { key: 'today', label: '今日订单', value: stats.value.today_orders, icon: 'Calendar', color: '#0ea5e9', bg: 'rgba(14, 165, 233, 0.12)' },
-  { key: 'amount', label: '今日营业额', value: stats.value.today_amount, icon: 'Money', color: '#10b981', bg: 'rgba(16, 185, 129, 0.12)', money: true },
+  { key: 'total', label: '订单总数', value: stats.value.total, icon: 'Tickets', color: 'var(--blue)', bg: 'var(--blue-soft)' },
+  { key: 'pending', label: '待接单', value: stats.value.pending, icon: 'Bell', color: '#b47f18', bg: 'rgba(232, 190, 96, 0.18)' },
+  { key: 'today', label: '今日订单', value: stats.value.today_orders, icon: 'Calendar', color: 'var(--cat-2-ink)', bg: 'var(--cat-2-bg)' },
+  { key: 'amount', label: '今日营业额', value: stats.value.today_amount, icon: 'Money', color: 'var(--leaf-text)', bg: 'var(--lime-soft)', money: true },
 ])
 
 function buildParams() {
@@ -356,40 +356,46 @@ onMounted(loadAll)
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 14px;
+  gap: 12px;
   margin-bottom: 16px;
 }
 
 .stat-card {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
+  gap: 13px;
+  padding: 16px 18px;
 
   &__icon {
     display: grid;
     place-items: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 11px;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--r-sm);
     flex-shrink: 0;
   }
 
   &__body {
     display: flex;
     flex-direction: column;
+    gap: 2px;
     min-width: 0;
   }
 
   &__label {
     font-size: 12px;
-    color: var(--app-text-secondary);
+    font-weight: 600;
+    color: var(--ink-soft);
   }
 
   &__value {
-    font-size: 21px;
-    line-height: 1.3;
-    color: var(--app-text);
+    font-family: var(--font-mono);
+    font-size: 24px;
+    font-weight: 650;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
   }
 }
 

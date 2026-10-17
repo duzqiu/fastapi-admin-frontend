@@ -1,10 +1,18 @@
 <template>
   <div class="login">
-    <!-- 登录表单：整页居中 -->
-    <div class="login__form">
-      <div class="login__form-inner">
-        <h2>欢迎回来 👋</h2>
-        <p class="login__subtitle">请使用管理员账号登录</p>
+    <div class="login-main">
+      <div class="login-brand">
+        <span class="brand-mark" aria-hidden="true"><span class="brand-dot" /></span>
+        <div class="brand-text">
+          <div class="brand-name">{{ appStore.projectName }}</div>
+          <div class="brand-sub">Admin Console</div>
+        </div>
+      </div>
+
+      <section class="login-card">
+        <span class="eyebrow">账号登录</span>
+        <h1 class="login-card__title">登录</h1>
+        <p class="login-card__sub">使用管理员分配的账号登录系统</p>
 
         <el-form
           ref="formRef"
@@ -12,6 +20,7 @@
           :rules="rules"
           size="large"
           label-position="top"
+          class="login-form"
           @keyup.enter="onSubmit"
         >
           <el-form-item label="账号" prop="username">
@@ -32,17 +41,14 @@
             </el-input>
           </el-form-item>
 
-          <el-form-item>
-            <div class="login__row">
-              <el-checkbox v-model="remember">记住账号</el-checkbox>
-              <span class="login__hint">默认账号：admin / admin123</span>
-            </div>
-          </el-form-item>
+          <div class="login-options">
+            <el-checkbox v-model="remember">记住账号</el-checkbox>
+            <span class="login-hint">默认账号：admin / admin123</span>
+          </div>
 
           <el-button
             type="primary"
-            size="large"
-            class="login__submit"
+            class="login-submit"
             :loading="loading"
             @click="onSubmit"
           >
@@ -50,29 +56,30 @@
           </el-button>
         </el-form>
 
-        <p class="login__footer">
-          前端可独立部署，接口地址由 <code>VITE_API_BASE_URL</code> 配置
+        <p class="login-note">
+          接口地址由 <code>VITE_API_BASE_URL</code> 配置
         </p>
-      </div>
+      </section>
     </div>
 
-    <!-- 底部监管信息（版权 + 备案号） -->
-    <PageFooter />
+    <PageFooter class="login-footer" />
   </div>
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
 import PageFooter from '@/components/PageFooter.vue'
+import { useAppStore } from '@/stores/app'
 import { useUserStore } from '@/stores/user'
 
 const REMEMBER_KEY = 'admin_remember_username'
 
 const route = useRoute()
 const router = useRouter()
+const appStore = useAppStore()
 const userStore = useUserStore()
 
 const formRef = ref(null)
@@ -121,85 +128,181 @@ async function onSubmit() {
   }
 }
 
-onMounted(() => {
-  const saved = localStorage.getItem(REMEMBER_KEY)
-  if (saved) {
-    form.username = saved
-    form.password = ''
-  }
-})
+const saved = localStorage.getItem(REMEMBER_KEY)
+if (saved) {
+  form.username = saved
+  form.password = ''
+}
 </script>
 
 <style scoped lang="scss">
 .login {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: 40px 20px 72px;
+  overflow: hidden;
+  background:
+    radial-gradient(42% 38% at 80% 6%, var(--ambient-a), transparent 70%),
+    radial-gradient(46% 42% at 8% 96%, var(--ambient-b), transparent 72%),
+    var(--canvas);
+}
+
+.login-main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 100vh;
-  padding: 40px 24px;
-  background: var(--app-surface);
+  gap: 22px;
+  width: 100%;
+  max-width: 396px;
+}
 
-  // 加边框示意登录区的范围；内边距让边框不贴着表单控件
-  &__form {
-    width: 100%;
-    // 全局是 border-box，416 = 360（原来的表单控件宽度）+ 28*2 内边距
-    max-width: 416px;
-    padding: 32px 28px;
-    border: 1px solid var(--app-border);
-    border-radius: var(--app-radius);
-    // 上下 auto 吸掉剩余空间：表单在「顶部 ~ 底部监管信息」之间垂直居中，footer 自然贴底
-    margin: auto;
+/* ── 品牌 ───────────────────────────────────────────────────── */
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: var(--r-sm);
+  background: var(--dark-surface);
+  box-shadow:
+    0 1px 3px rgba(14, 18, 20, 0.16),
+    0 6px 16px rgba(14, 18, 20, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.brand-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--lime);
+  box-shadow: 0 0 0 4px rgba(130, 221, 45, 0.2), 0 0 12px rgba(130, 221, 45, 0.6);
+}
+
+.brand-name {
+  font-size: 14.5px;
+  font-weight: 720;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--ink);
+}
+
+.brand-sub {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+}
+
+/* ── 登录卡 ─────────────────────────────────────────────────── */
+.login-card {
+  width: 100%;
+  padding: 30px 30px 22px;
+  border: 1px solid var(--glass-line);
+  border-radius: var(--r-xl);
+  background: var(--surface);
+  box-shadow: var(--e3), var(--edge);
+}
+
+.eyebrow {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.login-card__title {
+  margin-top: 8px;
+  font-size: 28px;
+  font-weight: 740;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
+.login-card__sub {
+  margin-top: 4px;
+  margin-bottom: 22px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+
+.login-form {
+  :deep(.el-form-item) {
+    margin-bottom: 16px;
   }
 
-  &__form-inner {
-    width: 100%;
+  :deep(.el-form-item__label) {
+    padding-bottom: 6px;
+  }
+}
 
-    h2 {
-      margin: 0 0 6px;
-      font-size: 25px;
-      color: var(--app-text);
-    }
+.login-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.login-hint {
+  font-size: 11.5px;
+  color: var(--ink-faint);
+}
+
+.login-submit {
+  width: 100%;
+  height: 44px;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+}
+
+.login-note {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--ink-faint);
+
+  code {
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: var(--blue-soft);
+    color: var(--blue);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+  }
+}
+
+.login-footer {
+  position: absolute;
+  right: 24px;
+  bottom: 18px;
+  left: 24px;
+}
+
+@media (max-width: 480px) {
+  .login {
+    padding: 28px 16px 64px;
   }
 
-  &__subtitle {
-    margin: 0 0 26px;
-    color: var(--app-text-secondary);
-    font-size: 14px;
+  .login-card {
+    padding: 24px 20px 18px;
   }
 
-  &__row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
+  .login-options {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
   }
-
-  &__hint {
-    font-size: 12px;
-    color: var(--app-text-placeholder);
-  }
-
-  &__submit {
-    width: 100%;
-    height: 44px;
-    font-size: 15px;
-    letter-spacing: 2px;
-    box-shadow: 0 10px 22px rgba(79, 70, 229, 0.28);
-  }
-
-  &__footer {
-    margin: 22px 0 0;
-    text-align: center;
-    font-size: 12px;
-    color: var(--app-text-placeholder);
-
-    code {
-      padding: 2px 6px;
-      border-radius: 4px;
-      background: var(--app-primary-soft);
-      color: var(--app-primary);
-    }
-  }
-
 }
 </style>

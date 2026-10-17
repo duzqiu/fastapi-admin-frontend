@@ -9,7 +9,13 @@ import 'element-plus/dist/index.css'
 import App from './App.vue'
 import router from './router'
 import { setUnauthorizedHandler } from '@/api/request'
+import { initTheme } from '@/composables/theme'
+import '@/styles/tokens.css'
+import '@/styles/materials.css'
 import '@/styles/index.scss'
+
+// 先把外观落到 <html data-theme>，避免首屏闪一下浅色
+initTheme()
 
 const app = createApp(App)
 

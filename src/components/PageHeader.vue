@@ -1,12 +1,12 @@
 <template>
-  <div class="page-header">
-    <div class="page-header__main">
-      <h2 class="page-header__title">
+  <div class="page-head">
+    <div class="page-head__main">
+      <h2 class="page-head__title">
         <slot name="title">{{ title }}</slot>
       </h2>
-      <p v-if="description" class="page-header__desc">{{ description }}</p>
+      <p v-if="description" class="page-head__desc">{{ description }}</p>
     </div>
-    <div class="page-header__extra">
+    <div v-if="$slots.default" class="page-head__side">
       <slot />
     </div>
   </div>
@@ -20,32 +20,51 @@ defineProps({
 </script>
 
 <style scoped lang="scss">
-.page-header {
+.page-head {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 18px;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  margin-bottom: 20px;
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
 
   &__title {
     margin: 0;
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--app-text);
-    letter-spacing: 0.2px;
+    font-size: 28px;
+    font-weight: 740;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    text-wrap: balance;
   }
 
   &__desc {
-    margin: 6px 0 0;
+    margin-top: 6px;
+    max-width: 680px;
     font-size: 13px;
-    color: var(--app-text-secondary);
+    line-height: 1.6;
+    color: var(--ink-muted);
+    text-wrap: pretty;
   }
 
-  &__extra {
+  &__side {
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-wrap: wrap;
     flex-shrink: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-head__title {
+    font-size: 22px;
   }
 }
 </style>
