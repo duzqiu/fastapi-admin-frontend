@@ -88,6 +88,11 @@
             </el-tag>
           </template>
         </el-table-column>
+        <el-table-column label="工作年限" width="100">
+          <template #default="{ row }">
+            {{ row.work_years ? `${row.work_years} 年` : '-' }}
+          </template>
+        </el-table-column>
         <el-table-column prop="sort" label="排序" width="80" />
         <el-table-column label="是否启用" width="110">
           <template #default="{ row }">
@@ -199,6 +204,10 @@
             />
           </el-select>
         </el-form-item>
+        <el-form-item label="工作年限">
+          <el-input-number v-model="form.work_years" :min="0" :max="80" />
+          <span class="form-tip">年，0 表示未设置</span>
+        </el-form-item>
         <el-form-item label="个人主页">
           <el-input v-model="form.website" placeholder="选填，作品集 / 博客地址" />
         </el-form-item>
@@ -276,6 +285,7 @@ const defaultForm = () => ({
   city: '',
   job_intention: '',
   current_status: 'employed_open',
+  work_years: 0,
   website: '',
   remark: '',
   is_active: true,
@@ -358,6 +368,7 @@ function openEdit(row) {
     city: row.city || '',
     job_intention: row.job_intention || '',
     current_status: row.current_status || 'employed_open',
+    work_years: row.work_years ?? 0,
     website: row.website || '',
     remark: row.remark || '',
     is_active: row.is_active,
@@ -398,6 +409,7 @@ async function handleSubmit() {
     city: form.city || '',
     job_intention: form.job_intention || '',
     current_status: form.current_status,
+    work_years: form.work_years ?? 0,
     website: form.website || '',
     remark: form.remark || '',
     is_active: form.is_active,
