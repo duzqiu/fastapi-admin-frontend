@@ -116,8 +116,8 @@
           <el-input
             v-model="form.content"
             type="textarea"
-            :rows="6"
-            placeholder="例如：五年后端开发经验，熟悉 FastAPI 与 SQLAlchemy。"
+            :autosize="{ minRows: 6, maxRows: 14 }"
+            placeholder="支持换行，可按 1. 2. 3. 分条填写，例如：1. 熟悉 FastAPI 与 SQLAlchemy。"
           />
         </el-form-item>
         <el-form-item label="是否启用">

@@ -142,8 +142,8 @@
           <el-input
             v-model="form.description"
             type="textarea"
-            :rows="3"
-            placeholder="选填，工作内容 / 业绩"
+            :autosize="{ minRows: 3, maxRows: 8 }"
+            placeholder="选填，工作内容 / 业绩；支持换行，可按 1. 2. 3. 分条填写"
           />
         </el-form-item>
         <el-form-item label="是否启用">

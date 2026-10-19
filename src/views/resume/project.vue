@@ -151,24 +151,24 @@
           <el-input
             v-model="form.description"
             type="textarea"
-            :rows="3"
-            placeholder="选填，项目背景 / 目标"
+            :autosize="{ minRows: 3, maxRows: 8 }"
+            placeholder="选填，项目背景 / 目标；支持换行"
           />
         </el-form-item>
         <el-form-item label="项目职责">
           <el-input
             v-model="form.duty"
             type="textarea"
-            :rows="3"
-            placeholder="选填，负责哪些模块、做了哪些事"
+            :autosize="{ minRows: 3, maxRows: 8 }"
+            placeholder="选填，负责哪些模块、做了哪些事；支持换行，可按 1. 2. 3. 分条填写"
           />
         </el-form-item>
         <el-form-item label="项目业绩">
           <el-input
             v-model="form.achievement"
             type="textarea"
-            :rows="3"
-            placeholder="选填，产出的指标与结果，如：回归耗时从 2 天降到 40 分钟"
+            :autosize="{ minRows: 3, maxRows: 8 }"
+            placeholder="选填，产出的指标与结果；支持换行，如：1. 回归耗时从 2 天降到 40 分钟"
           />
         </el-form-item>
         <el-form-item label="是否启用">
