@@ -2,7 +2,7 @@
   <div class="page-container">
     <PageHeader
       title="帖子管理"
-      description="审核用户发布的帖子：新帖默认「待审核」，审核为「已通过」后才会对外展示，也可改为「已拒绝」。"
+      description="新帖默认「待审核」；审核为「已通过」或「已拒绝」后结果不可再更改。被拒绝的帖子需作者修改后重新提交，才会回到待审核重新走一遍审核。"
     />
 
     <el-card shadow="never" class="app-card">
@@ -87,10 +87,13 @@
         <el-table-column label="操作" width="210" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" @click="openDetail(row)">详情</el-button>
+            <!-- 只有「待审核」能下结论；已通过 / 已拒绝都是终态，按钮置灰 -->
             <el-button
               link
               type="success"
-              :disabled="row.status === 'approved'"
+              class="audit-btn"
+              :disabled="row.status !== 'pending'"
+              :title="row.status === 'pending' ? '通过审核' : '已审核，结果不可更改'"
               :loading="auditLoadingId === row.id"
               @click="handleAudit(row, 'approved')"
             >
@@ -99,7 +102,9 @@
             <el-button
               link
               type="warning"
-              :disabled="row.status === 'rejected'"
+              class="audit-btn"
+              :disabled="row.status !== 'pending'"
+              :title="row.status === 'pending' ? '拒绝帖子' : '已审核，结果不可更改'"
               :loading="auditLoadingId === row.id"
               @click="handleAudit(row, 'rejected')"
             >
@@ -221,6 +226,12 @@ function openDetail(row) {
 }
 
 async function handleAudit(row, status) {
+  // 双重保险：按钮已置灰，这里再拦一次，避免误触
+  if (row.status !== 'pending') {
+    ElMessage.warning('该帖子已审核，结果不可再更改')
+    return
+  }
+
   const label = postStatusLabel(status)
   if (status === 'rejected') {
     try {
@@ -277,6 +288,12 @@ onMounted(loadData)
 </script>
 
 <style scoped lang="scss">
+/* 已审核的行：两个审核按钮明显置灰，避免看起来还能点 */
+.audit-btn.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .content-preview {
   display: -webkit-box;
   -webkit-box-orient: vertical;
