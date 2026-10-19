@@ -36,6 +36,19 @@ export const MEMBER_GENDERS = [
 ]
 
 /** 菜品售卖状态（与后端 DishStatus 一致） */
+/** 帖子审核状态（与后端 PostStatus 一致） */
+export const POST_STATUS = [
+  { value: 'pending', label: '待审核', tag: 'warning' },
+  { value: 'approved', label: '已通过', tag: 'success' },
+  { value: 'rejected', label: '已拒绝', tag: 'danger' },
+]
+
+export const postStatusLabel = (value) =>
+  POST_STATUS.find((item) => item.value === value)?.label || value
+
+export const postStatusTagType = (value) =>
+  POST_STATUS.find((item) => item.value === value)?.tag || 'info'
+
 export const DISH_STATUS = [
   { value: 'on_sale', label: '在售', tag: 'success' },
   { value: 'off_shelf', label: '已下架', tag: 'info' },

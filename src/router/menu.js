@@ -74,6 +74,21 @@ const menuStructure = [
     ],
   },
   {
+    // 一级菜单：文章管理
+    key: 'article',
+    title: '文章管理',
+    icon: 'Collection',
+    roles: ['admin'],
+    children: [
+      {
+        path: '/posts',
+        name: 'Posts',
+        component: () => import('@/views/article/post.vue'),
+        meta: { title: '帖子管理', icon: 'Document', roles: ['admin'] },
+      },
+    ],
+  },
+  {
     // 一级菜单：代办事项
     key: 'todo',
     title: '代办事项',
