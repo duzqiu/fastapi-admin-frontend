@@ -16,6 +16,6 @@ export function fetchAboutPasswordStatus() {
   return request.get(`${BASE}/about-password`)
 }
 
-export function updateAboutPassword(password) {
-  return request.put(`${BASE}/about-password`, { password })
+export function updateAboutPassword(payload) {
+  return request.put(`${BASE}/about-password`, payload)
 }
