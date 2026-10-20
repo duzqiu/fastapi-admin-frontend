@@ -1,6 +1,6 @@
 <template>
   <div class="page-container">
-    <PageHeader title="工作经历" description="个人简历 · 任职经历（独立类目）">
+    <PageHeader title="工作经历" description="个人网站 · 任职经历（独立类目）">
       <el-button type="primary" @click="openCreate">
         <el-icon><Plus /></el-icon> 新增工作经历
       </el-button>

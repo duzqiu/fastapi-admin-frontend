@@ -1,6 +1,6 @@
 <template>
   <div class="page-container">
-    <PageHeader title="技能标签" description="个人简历 · 技能标签（一个分类 + 多个标签）">
+    <PageHeader title="技能标签" description="个人网站 · 技能标签（一个分类 + 多个标签）">
       <el-button type="primary" @click="openCreate">
         <el-icon><Plus /></el-icon> 新增技能标签
       </el-button>

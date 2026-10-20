@@ -104,12 +104,24 @@ const menuStructure = [
     ],
   },
   {
-    // 一级菜单：个人简历（独立类目，六块数据各自一页）
+    // 一级菜单：个人网站（站点设置 + 六块简历数据各自一页）
     key: 'resume',
-    title: '个人简历',
-    icon: 'Notebook',
+    title: '个人网站',
+    icon: 'Monitor',
     roles: ['admin'],
     children: [
+      {
+        path: '/site-welcome',
+        name: 'SiteWelcome',
+        component: () => import('@/views/site/welcome.vue'),
+        meta: { title: '欢迎语', icon: 'HomeFilled', roles: ['admin'] },
+      },
+      {
+        path: '/site-about-password',
+        name: 'SiteAboutPassword',
+        component: () => import('@/views/site/about-password.vue'),
+        meta: { title: '解锁密码', icon: 'Lock', roles: ['admin'] },
+      },
       {
         path: '/resume-personal',
         name: 'ResumePersonal',
@@ -117,7 +129,7 @@ const menuStructure = [
         meta: { title: '个人信息', icon: 'User', roles: ['admin'] },
       },
       {
-        // 「个人简介」下面紧跟技能标签：分类 + 多个标签
+        // 个人信息下面是技能标签：分类 + 多个标签
         path: '/resume-skill',
         name: 'ResumeSkill',
         component: () => import('@/views/resume/skill.vue'),

@@ -1,6 +1,6 @@
 <template>
   <div class="page-container">
-    <PageHeader title="教育信息" description="个人简历 · 求学经历（独立类目）">
+    <PageHeader title="教育信息" description="个人网站 · 求学经历（独立类目）">
       <el-button type="primary" @click="openCreate">
         <el-icon><Plus /></el-icon> 新增教育信息
       </el-button>

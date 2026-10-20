@@ -72,14 +72,14 @@ export const COUNTDOWN_CYCLES = [
   { value: 'yearly', label: '每年', tag: 'warning' },
 ]
 
-/** 个人简历·性别（与后端 ResumeGender 一致，独立于会员性别） */
+/** 个人网站·性别（与后端 ResumeGender 一致，独立于会员性别） */
 export const RESUME_GENDERS = [
   { value: 'male', label: '男', tag: 'primary' },
   { value: 'female', label: '女', tag: 'danger' },
   { value: 'secret', label: '保密', tag: 'info' },
 ]
 
-/** 个人简历·目前状态（与后端 ResumeCurrentStatus 一致） */
+/** 个人网站·目前状态（与后端 ResumeCurrentStatus 一致） */
 export const RESUME_CURRENT_STATUSES = [
   { value: 'resigned', label: '已离职-随时到岗', tag: 'success' },
   { value: 'left', label: '已离职-月内到岗', tag: 'primary' },
@@ -87,7 +87,7 @@ export const RESUME_CURRENT_STATUSES = [
   { value: 'employed_closed', label: '在职-暂不考虑', tag: 'info' },
 ]
 
-/** 个人简历·学历（与后端 EducationDegree 一致） */
+/** 个人网站·学历（与后端 EducationDegree 一致） */
 export const EDUCATION_DEGREES = [
   { value: 'high_school', label: '高中及以下', tag: 'info' },
   { value: 'college', label: '大专', tag: 'info' },

@@ -1,6 +1,6 @@
 <template>
   <div class="page-container">
-    <PageHeader title="自我评价" description="个人简历 · 自我评价（独立类目）">
+    <PageHeader title="自我评价" description="个人网站 · 自我评价（独立类目）">
       <el-button type="primary" @click="openCreate">
         <el-icon><Plus /></el-icon> 新增自我评价
       </el-button>
