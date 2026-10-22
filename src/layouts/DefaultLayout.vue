@@ -239,7 +239,8 @@ function railIconOnly() {
 
 function isGroupOpen(key) {
   if (railIconOnly()) return true
-  return !appStore.collapsedMenus.includes(key)
+  // 只有本次会话里手动展开过的才显示，默认全部收起
+  return appStore.expandedMenus.includes(key)
 }
 
 function toggleGroup(key) {
@@ -253,7 +254,7 @@ function toggleGroup(key) {
   window.setTimeout(() => nav?.classList.remove('is-snapping'), 60)
 }
 
-/** 进到某个分组下的页面时把它展开：刷新后当前页不会藏在收起的组里 */
+/** 切换到某个分组下的页面时把它展开（进入后台时不会调用，保持全部收起） */
 function expandActiveGroup(path) {
   const group = groups.value.find(
     (entry) => entry.title && entry.items.some((item) => item.path === path),
@@ -301,8 +302,7 @@ function toggleRail() {
 let observer = null
 
 onMounted(() => {
-  // 刷新后当前页所在分组保持展开，否则选中项会藏在收起的组里
-  expandActiveGroup(route.path)
+  // 进入后台时二级菜单默认全部收起，这里不展开当前页所在分组
   // 首次进入的那一页也要计入使用频次
   usageStore.record(route.path)
   nextTick(syncThumb)
