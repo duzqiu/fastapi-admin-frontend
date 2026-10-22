@@ -1,25 +1,14 @@
 /** 与后端保持一致的枚举常量 */
 
-/** 系统显示名称（侧边栏、浏览器标题、登录页统一使用此常量） */
+/** 系统全称（浏览器标题、底部版权行使用） */
 export const APP_NAME = '后台管理系统'
 
-/**
- * 底部监管信息（版权 + 备案号）
- *
- * ⚠️ 目前是**假数据**：每条都带 `-demo` 后缀，方便上线前全局搜索替换成真实信息。
- * 替换时注意备案号里的省份简称（京/沪/粤…）要与实际备案地一致。
- */
+/** 侧边栏 / 登录页左上角的品牌名（比全称短一点） */
+export const APP_BRAND_NAME = 'PBMS管理系统'
+
+/** 底部版权行（只保留「© 年份 系统名」，需要备案信息时再往这里加） */
 export const SITE_LEGAL = {
-  /** 版权行；主体建议改成备案的公司全称 */
-  copyright: `© ${new Date().getFullYear()} ${APP_NAME} 版权所有-demo`,
-  icp: {
-    label: '京ICP备00000000号-1-demo',
-    link: 'https://beian.miit.gov.cn/',
-  },
-  police: {
-    label: '京公网安备 00000000000000号-demo',
-    link: 'https://beian.mps.gov.cn/',
-  },
+  copyright: `© ${new Date().getFullYear()} ${APP_NAME}`,
 }
 
 export const USER_ROLES = [

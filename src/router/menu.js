@@ -19,11 +19,20 @@ const menuStructure = [
     meta: { title: '仪表盘', icon: 'Odometer' },
   },
   {
-    // 一级菜单（叶子）：后台账号
-    path: '/users',
-    name: 'Users',
-    component: () => import('@/views/user/index.vue'),
-    meta: { title: '后台账号', icon: 'User', roles: ['admin'] },
+    // 一级菜单：后台管理
+    key: 'admin',
+    title: '后台管理',
+    icon: 'Management',
+    roles: ['admin'],
+    children: [
+      {
+        // 后台账号：能登录这个后台系统的账号（与「用户列表」里的 C 端会员不是一回事）
+        path: '/users',
+        name: 'Users',
+        component: () => import('@/views/user/index.vue'),
+        meta: { title: '后台账号', icon: 'User', roles: ['admin'] },
+      },
+    ],
   },
   {
     // 一级菜单：用户管理

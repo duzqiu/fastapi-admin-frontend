@@ -19,17 +19,38 @@
           <span ref="thumbEl" class="nav-thumb m-pill" :style="thumbStyle" aria-hidden="true" />
 
           <div v-for="group in groups" :key="group.key" class="nav-group">
-            <div v-if="group.title" class="nav-group-title">{{ group.title }}</div>
-            <div class="nav-list">
+            <button
+              v-if="group.title"
+              type="button"
+              class="nav-group-title"
+              :class="{ 'is-collapsed': !isGroupOpen(group.key) }"
+              :aria-expanded="isGroupOpen(group.key)"
+              :title="group.title"
+              @click="toggleGroup(group.key)"
+            >
+              <span class="nav-group-title__text">{{ group.title }}</span>
+              <el-icon class="nav-group-caret" :size="12"><ArrowDown /></el-icon>
+            </button>
+
+            <!-- 直接切换显示：高度动画会让下面的分组「撑开」，选中框也会飘 -->
+            <div v-show="isGroupOpen(group.key)" class="nav-list">
               <RouterLink
                 v-for="item in group.items"
                 :key="item.path"
                 :to="item.path"
                 class="nav-item"
-                :class="{ 'is-active': route.path === item.path }"
+                :class="{
+                  'is-active': route.path === item.path,
+                  'nav-item--top': group.topLevel,
+                }"
                 :title="appStore.sidebarCollapsed ? item.label : undefined"
               >
-                <el-icon class="nav-ico" :size="17">
+                <!-- 一级叶子菜单（仪表盘）：展开时不带图标，收成图标轨时再显示 -->
+                <el-icon
+                  v-if="!group.topLevel || railIconOnly()"
+                  class="nav-ico"
+                  :size="17"
+                >
                   <component :is="item.icon" />
                 </el-icon>
                 <span class="nav-label">{{ item.label }}</span>
@@ -138,11 +159,13 @@ import { useTheme } from '@/composables/theme'
 import { roleLabel } from '@/constants'
 import { findParentTitle, menuTree } from '@/router/menu'
 import { useAppStore } from '@/stores/app'
+import { useUsageStore } from '@/stores/usage'
 import { useUserStore } from '@/stores/user'
 
 const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
+const usageStore = useUsageStore()
 const userStore = useUserStore()
 const { theme, toggleTheme } = useTheme()
 
@@ -196,10 +219,47 @@ const groups = computed(() =>
       : {
           key: item.path,
           title: '',
+          // 一级叶子菜单（仪表盘）：和分组标题同一套字号，不显示图标
+          topLevel: true,
           items: [{ path: item.path, label: item.meta.title, icon: item.meta.icon }],
         },
   ),
 )
+
+/* ── 二级菜单展开 / 收起 ───────────────────────────────────── */
+const narrowQuery = window.matchMedia('(max-width: 820px)')
+
+/**
+ * 导航轨收起（桌面 76px）时只剩图标：没有可点的组标题，子项一律展开，
+ * 否则被收起来的分组会整组消失、再也点不开。
+ */
+function railIconOnly() {
+  return appStore.sidebarCollapsed && !(narrowQuery.matches && mobileOpen.value)
+}
+
+function isGroupOpen(key) {
+  if (railIconOnly()) return true
+  return !appStore.collapsedMenus.includes(key)
+}
+
+function toggleGroup(key) {
+  if (railIconOnly()) return
+
+  // 子项是瞬间增减的：选中框直接落到新位置，别做滑动，否则看起来像错位
+  const nav = navEl.value
+  nav?.classList.add('is-snapping')
+  appStore.toggleMenu(key)
+  nextTick(syncThumb)
+  window.setTimeout(() => nav?.classList.remove('is-snapping'), 60)
+}
+
+/** 进到某个分组下的页面时把它展开：刷新后当前页不会藏在收起的组里 */
+function expandActiveGroup(path) {
+  const group = groups.value.find(
+    (entry) => entry.title && entry.items.some((item) => item.path === path),
+  )
+  if (group) appStore.expandMenu(group.key)
+}
 
 /**
  * 选中项背后那块玻璃：量出当前项的位置，滑过去。
@@ -216,6 +276,11 @@ function syncThumb() {
 
   const navRect = nav.getBoundingClientRect()
   const activeRect = active.getBoundingClientRect()
+  // 当前页所在分组被收起时，选中项是隐藏的（高度 0）：不画那块玻璃
+  if (!activeRect.height) {
+    thumbStyle.value = { opacity: 0 }
+    return
+  }
 
   thumbStyle.value = {
     opacity: 1,
@@ -236,12 +301,25 @@ function toggleRail() {
 let observer = null
 
 onMounted(() => {
+  // 刷新后当前页所在分组保持展开，否则选中项会藏在收起的组里
+  expandActiveGroup(route.path)
+  // 首次进入的那一页也要计入使用频次
+  usageStore.record(route.path)
   nextTick(syncThumb)
   observer = new ResizeObserver(syncThumb)
   if (navEl.value) observer.observe(navEl.value)
 })
 
 onBeforeUnmount(() => observer?.disconnect())
+
+// 路由变化：进入哪个分组就把它展开，并记一次使用频次
+watch(
+  () => route.path,
+  (path) => {
+    expandActiveGroup(path)
+    usageStore.record(path)
+  },
+)
 
 watch(
   () => [route.path, appStore.sidebarCollapsed],
@@ -348,6 +426,8 @@ async function onCommand(command) {
 
 .brand-text {
   min-width: 0;
+  /* 品牌名比下面的英文长，让两行按中线对齐 */
+  text-align: center;
 }
 
 .brand-name {
@@ -378,13 +458,47 @@ async function onCommand(command) {
   margin-top: 14px;
 }
 
+/* 组标题就是二级菜单的折叠开关 */
 .nav-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
   padding: 6px 10px;
-  font-size: 11px;
+  border: 0;
+  border-radius: var(--r-xs);
+  background: none;
+  font: inherit;
+  font-size: 12px;
   font-weight: 650;
   letter-spacing: 0.06em;
   color: var(--ink-faint);
   white-space: nowrap;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    color: var(--ink-muted);
+    background: var(--hover-bg);
+  }
+}
+
+.nav-group-title__text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-group-caret {
+  flex: none;
+  color: var(--ink-faint);
+  transition: transform 0.24s var(--ease-premium);
+}
+
+.nav-group-title.is-collapsed .nav-group-caret {
+  transform: rotate(-90deg);
 }
 
 .nav-list {
@@ -408,6 +522,11 @@ async function onCommand(command) {
     opacity 0.2s ease;
 }
 
+/* 折叠 / 展开分组的这一下：不要过渡，选中框直接跟到新位置 */
+.rail-nav.is-snapping .nav-thumb {
+  transition: none;
+}
+
 .nav-item {
   position: relative;
   z-index: 1;
@@ -418,7 +537,7 @@ async function onCommand(command) {
   height: 38px;
   padding: 0 11px;
   border-radius: var(--r-sm);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 560;
   color: var(--ink-muted);
   text-align: left;
@@ -441,6 +560,24 @@ async function onCommand(command) {
     .nav-ico {
       color: var(--blue);
     }
+  }
+}
+
+/* 一级叶子菜单（仪表盘）：字号与分组标题一致；图标只在收起成图标轨时渲染 */
+.nav-item--top {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+
+  &:hover {
+    color: var(--ink-muted);
+  }
+
+  &.is-active {
+    color: var(--ink);
   }
 }
 
@@ -488,6 +625,11 @@ async function onCommand(command) {
   .nav-item {
     justify-content: center;
     padding: 0;
+  }
+
+  /* 只剩图标时，一级叶子项没有文字，得把图标放回来，不然是一行空白 */
+  .nav-item--top {
+    height: 38px;
   }
 
   .nav-group + .nav-group {
@@ -623,7 +765,7 @@ async function onCommand(command) {
 
 @media (max-width: 1180px) {
   .app-frame:not(.is-collapsed) {
-    --rail-w: 208px;
+    --rail-w: 192px;
   }
 }
 
@@ -665,14 +807,24 @@ async function onCommand(command) {
 
   .app-frame.is-collapsed {
     .brand-text,
-    .nav-label,
-    .nav-group-title {
+    .nav-label {
       display: revert;
+    }
+
+    /* 组标题是 button：revert 会回到 UA 默认的 flow-root，这里显式还原成 flex */
+    .nav-group-title {
+      display: flex;
     }
 
     .nav-item {
       justify-content: flex-start;
       padding: 0 11px;
+    }
+
+    /* 抽屉里文字是可见的，叶子项保持 28px 的标题高度 */
+    .nav-item--top {
+      height: 28px;
+      padding: 0 10px;
     }
 
     .rail-brand {

@@ -20,7 +20,7 @@
     <section class="quick">
       <div class="quick__head">
         <span class="section-label">常用入口</span>
-        <span class="quick__hint">日常维护频率最高的几页</span>
+        <span class="quick__hint">按你的使用频次自动排序，用得越多越靠前</span>
       </div>
 
       <div class="quick__grid">
@@ -44,10 +44,13 @@ import { computed, onMounted, ref } from 'vue'
 
 import { fetchDashboard } from '@/api/system'
 import PageHeader from '@/components/PageHeader.vue'
+import { findParentTitle } from '@/router/menu'
+import { useUsageStore, usageCatalog } from '@/stores/usage'
 import { useUserStore } from '@/stores/user'
 import { formatNumber } from '@/utils/format'
 
 const userStore = useUserStore()
+const usageStore = useUsageStore()
 
 const loading = ref(false)
 const stats = ref({
@@ -66,12 +69,63 @@ const today = new Date().toLocaleDateString('zh-CN', {
   weekday: 'short',
 })
 
-const quickLinks = [
-  { path: '/dishes', label: '菜品列表', desc: '菜名、价格、库存与套餐', icon: 'Bowl' },
-  { path: '/members', label: '用户列表', desc: '会员档案与启用状态', icon: 'Avatar' },
-  { path: '/dish-orders', label: '订单管理', desc: '接单、完成与取消', icon: 'Tickets' },
-  { path: '/countdowns', label: '倒数日', desc: '会员的纪念日与提醒', icon: 'AlarmClock' },
+// 常用入口占几个格子
+const QUICK_COUNT = 4
+
+// 还没有使用记录时先摆这几页，顺便给它们当兜底文案
+const DEFAULT_QUICK = [
+  { path: '/dishes', desc: '菜名、价格、库存与套餐' },
+  { path: '/members', desc: '会员档案与启用状态' },
+  { path: '/dish-orders', desc: '接单、完成与取消' },
+  { path: '/countdowns', desc: '会员的纪念日与提醒' },
 ]
+const DEFAULT_DESC = Object.fromEntries(DEFAULT_QUICK.map((item) => [item.path, item.desc]))
+const DEFAULT_RANK = Object.fromEntries(
+  DEFAULT_QUICK.map((item, index) => [item.path, index]),
+)
+
+function rankOf(path) {
+  return DEFAULT_RANK[path] ?? DEFAULT_QUICK.length
+}
+
+/**
+ * 常用入口：按累计访问次数从高到低取前几个。
+ *
+ * 次数由 `useUsageStore` 在每次进入页面时累加（记在 localStorage），
+ * 记录还不够时用默认入口补齐，保证这一块不会空着。
+ */
+const quickLinks = computed(() => {
+  const counts = usageStore.counts
+  const role = userStore.profile?.role
+  const accessible = usageCatalog.filter(
+    (item) => !item.roles.length || item.roles.includes(role),
+  )
+
+  const picked = accessible
+    .filter((item) => counts[item.path] > 0)
+    .sort((a, b) => counts[b.path] - counts[a.path])
+    .slice(0, QUICK_COUNT)
+    .map((item) => ({ ...item, desc: `访问 ${counts[item.path]} 次` }))
+
+  if (picked.length < QUICK_COUNT) {
+    const taken = new Set(picked.map((item) => item.path))
+    const filler = accessible
+      .filter((item) => !taken.has(item.path) && !counts[item.path])
+      .sort(
+        (a, b) => rankOf(a.path) - rankOf(b.path) || a.label.localeCompare(b.label),
+      )
+
+    for (const item of filler) {
+      if (picked.length >= QUICK_COUNT) break
+      picked.push({
+        ...item,
+        desc: DEFAULT_DESC[item.path] || findParentTitle(item.path) || '打开这一页',
+      })
+    }
+  }
+
+  return picked
+})
 
 const cards = computed(() => [
   {

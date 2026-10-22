@@ -165,6 +165,12 @@ if (saved) {
   gap: 11px;
 }
 
+.brand-text {
+  min-width: 0;
+  /* 品牌名比下面的英文长，让两行按中线对齐 */
+  text-align: center;
+}
+
 .brand-mark {
   display: inline-flex;
   align-items: center;
