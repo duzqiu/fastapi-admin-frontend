@@ -77,6 +77,9 @@
         <el-table-column label="发布时间" width="170">
           <template #default="{ row }">{{ formatDateTime(row.published_at) }}</template>
         </el-table-column>
+        <el-table-column label="访问量" width="90" align="right">
+          <template #default="{ row }">{{ row.view_count || 0 }}</template>
+        </el-table-column>
         <el-table-column label="审核状态" width="110">
           <template #default="{ row }">
             <el-tag :type="postStatusTagType(row.status)" size="small" effect="light">
@@ -143,6 +146,8 @@
           发布人：{{ detail.row.publisher }}
           <span class="detail__sep">·</span>
           发布时间：{{ formatDateTime(detail.row.published_at) }}
+          <span class="detail__sep">·</span>
+          访问量：{{ detail.row.view_count || 0 }}
         </div>
         <div class="detail__content">{{ detail.row.content || '（无正文）' }}</div>
         <div v-if="detail.row.images && detail.row.images.length" class="detail__images">
