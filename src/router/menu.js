@@ -95,6 +95,12 @@ const menuStructure = [
         component: () => import('@/views/article/post.vue'),
         meta: { title: '帖子管理', icon: 'Document', roles: ['admin'] },
       },
+      {
+        path: '/comments',
+        name: 'Comments',
+        component: () => import('@/views/article/comment.vue'),
+        meta: { title: '评论管理', icon: 'ChatDotSquare', roles: ['admin'] },
+      },
     ],
   },
   {
