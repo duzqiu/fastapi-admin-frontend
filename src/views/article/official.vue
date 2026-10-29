@@ -8,8 +8,8 @@
           <el-select v-model="query.status" placeholder="全部状态" clearable style="width: 130px">
             <el-option v-for="item in POST_STATUS" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
-          <el-select v-model="query.member_id" filterable remote clearable :remote-method="searchFilterMembers" :loading="filterMembersLoading" placeholder="搜索发布人" style="width: 220px" @visible-change="(visible) => visible && searchFilterMembers('')">
-            <el-option v-for="member in filterMembers" :key="member.id" :label="memberLabel(member)" :value="member.id" />
+          <el-select v-model="query.user_id" filterable remote clearable :remote-method="searchFilterMembers" :loading="filterMembersLoading" placeholder="按用户 ID / 昵称" style="width: 220px" @visible-change="(visible) => visible && searchFilterMembers('')">
+            <el-option v-for="member in filterMembers" :key="member.member_no" :label="memberLabel(member)" :value="member.member_no" />
           </el-select>
           <el-input v-model="query.source" placeholder="来源" clearable maxlength="100" style="width: 140px" @keyup.enter="handleSearch" />
           <el-button type="primary" plain @click="handleSearch">查询</el-button>
@@ -20,7 +20,7 @@
       <el-table v-loading="loading" :data="rows" stripe row-key="id" empty-text="暂无官号文章">
         <el-table-column prop="article_no" label="文章ID" width="150" />
         <el-table-column prop="publisher" label="发布人" width="140" show-overflow-tooltip />
-        <el-table-column prop="member_id" label="会员ID" width="90" />
+        <el-table-column prop="user_id" label="用户ID" width="110" show-overflow-tooltip />
         <el-table-column prop="title" label="标题" width="230" show-overflow-tooltip />
         <el-table-column prop="content" label="正文" width="260" show-overflow-tooltip />
         <el-table-column label="图片" width="150">
@@ -66,7 +66,7 @@
             <el-descriptions-item label="文章ID">{{ detail.data.article_no }}</el-descriptions-item>
             <el-descriptions-item label="内部ID">{{ detail.data.id }}</el-descriptions-item>
             <el-descriptions-item label="发布人">{{ detail.data.publisher }}</el-descriptions-item>
-            <el-descriptions-item label="会员ID">{{ detail.data.member_id ?? '-' }}</el-descriptions-item>
+            <el-descriptions-item label="用户ID">{{ detail.data.user_id || '-' }}</el-descriptions-item>
             <el-descriptions-item label="审核状态"><el-tag :type="postStatusTagType(detail.data.status)">{{ postStatusLabel(detail.data.status) }}</el-tag></el-descriptions-item>
             <el-descriptions-item label="访问量">{{ detail.data.view_count ?? 0 }}</el-descriptions-item>
             <el-descriptions-item label="来源">{{ detail.data.source }}</el-descriptions-item>
@@ -89,9 +89,9 @@
         <el-alert title="保存后进入待审核，原审核结果将重置。时间按当前设备时区选择，提交时转为带 UTC 时区的 ISO 时间。" type="info" :closable="false" show-icon class="form-alert" />
         <el-alert v-if="publisherWarning" :title="publisherWarning" type="warning" :closable="false" show-icon class="form-alert" />
         <el-form label-position="top" :disabled="saving || editor.loading" @submit.prevent="saveArticle">
-          <el-form-item label="发布人（已启用会员）" required>
-            <el-select v-model="form.member_id" filterable remote clearable :remote-method="searchEditorMembers" :loading="editorMembersLoading" placeholder="搜索会员昵称 / 邮箱 / ID" style="width: 100%" @visible-change="(visible) => visible && searchEditorMembers('')" @change="publisherWarning = ''">
-              <el-option v-for="member in editorMembers" :key="member.id" :label="memberLabel(member)" :value="member.id" />
+          <el-form-item label="发布人（已启用用户）" required>
+            <el-select v-model="form.user_id" filterable remote clearable :remote-method="searchEditorMembers" :loading="editorMembersLoading" placeholder="搜索用户ID / 昵称 / 邮箱" style="width: 100%" @visible-change="(visible) => visible && searchEditorMembers('')" @change="publisherWarning = ''">
+              <el-option v-for="member in editorMembers" :key="member.member_no" :label="memberLabel(member)" :value="member.member_no" />
             </el-select>
           </el-form-item>
           <el-form-item label="原文链接（HTTP / HTTPS）" required><el-input v-model="form.url" placeholder="https://..." /></el-form-item>
@@ -121,7 +121,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import PageHeader from '@/components/PageHeader.vue'
 import { POST_STATUS, postStatusLabel, postStatusTagType } from '@/constants'
 import { formatDateTime } from '@/utils/format'
-import { fetchMember, fetchMembers } from '@/api/member'
+import { fetchMembers } from '@/api/member'
 import {
   fetchOfficialArticles, fetchOfficialArticle, createOfficialArticle,
   updateOfficialArticle, auditOfficialArticle, deleteOfficialArticle,
@@ -133,7 +133,7 @@ const timeFields = [
   { key: 'created_at', label: '创建时间' },
   { key: 'updated_at', label: '更新时间' },
 ]
-const query = reactive({ keyword: '', status: '', member_id: null, source: '', page: 1, page_size: 10 })
+const query = reactive({ keyword: '', status: '', user_id: null, source: '', page: 1, page_size: 10 })
 const rows = ref([])
 const total = ref(0)
 const loading = ref(false)
@@ -146,7 +146,7 @@ const filterMembers = ref([])
 const editorMembers = ref([])
 const filterMembersLoading = ref(false)
 const editorMembersLoading = ref(false)
-const blankForm = () => ({ member_id: null, url: '', title: '', content: '', imagesText: '', source: '', published_at: null, crawled_at: null, board: '', rank: '' })
+const blankForm = () => ({ user_id: null, url: '', title: '', content: '', imagesText: '', source: '', published_at: null, crawled_at: null, board: '', rank: '' })
 const form = reactive(blankForm())
 let listRequest = 0
 let editorRequest = 0
@@ -155,7 +155,7 @@ let filterSearchRequest = 0
 let editorSearchRequest = 0
 
 function memberLabel(member) {
-  return `${member.display_name || member.nickname || member.email || '会员'} · ${member.member_no || member.id}${member.email ? ` · ${member.email}` : ''}`
+  return `${member.display_name || member.nickname || member.email || '用户'} · ${member.member_no || member.id}${member.email ? ` · ${member.email}` : ''}`
 }
 function isHttpUrl(value) {
   try {
@@ -170,7 +170,7 @@ async function loadData() {
   for (const key of ['keyword', 'status', 'source']) {
     if (query[key]?.trim()) params[key] = query[key].trim()
   }
-  if (query.member_id) params.member_id = query.member_id
+  if (query.user_id) params.user_id = query.user_id
   try {
     const data = await fetchOfficialArticles(params)
     if (request !== listRequest) return
@@ -181,7 +181,7 @@ async function loadData() {
 }
 function handleSearch() { query.page = 1; loadData() }
 function handleReset() {
-  Object.assign(query, { keyword: '', status: '', member_id: null, source: '', page: 1 })
+  Object.assign(query, { keyword: '', status: '', user_id: null, source: '', page: 1 })
   loadData()
 }
 async function searchFilterMembers(keyword) {
@@ -190,7 +190,7 @@ async function searchFilterMembers(keyword) {
   try {
     const data = await fetchMembers({ is_active: true, keyword, page_size: 50 })
     if (request !== filterSearchRequest) return
-    const selected = filterMembers.value.find((member) => member.id === query.member_id)
+    const selected = filterMembers.value.find((member) => member.member_no === query.user_id)
     filterMembers.value = data.items.filter((member) => member.is_active)
     if (selected && !filterMembers.value.some((member) => member.id === selected.id)) filterMembers.value.unshift(selected)
   } catch { /* Shared interceptor reports errors. */ }
@@ -202,7 +202,7 @@ async function searchEditorMembers(keyword) {
   try {
     const data = await fetchMembers({ is_active: true, keyword, page_size: 50 })
     if (request !== editorSearchRequest || !editor.visible) return
-    const selected = editorMembers.value.find((member) => member.id === form.member_id && member.is_active)
+    const selected = editorMembers.value.find((member) => member.member_no === form.user_id && member.is_active)
     editorMembers.value = data.items.filter((member) => member.is_active)
     if (selected && !editorMembers.value.some((member) => member.id === selected.id)) editorMembers.value.unshift(selected)
   } catch { /* Shared interceptor reports errors. */ }
@@ -229,11 +229,15 @@ function openCreate() {
   publisherWarning.value = ''
   searchEditorMembers('')
 }
-async function verifyPublisher(id) {
-  if (!id) return null
+async function verifyPublisher(userId) {
+  // 用「用户 ID」（member_no）反查用户：后台不再依赖内部 member_id
+  if (!userId) return null
   try {
-    const member = await fetchMember(id)
-    return member.is_active ? member : null
+    const data = await fetchMembers({ keyword: String(userId), page_size: 10 })
+    const member = (data.items || []).find(
+      (item) => String(item.member_no) === String(userId) && item.is_active,
+    )
+    return member || null
   } catch (error) {
     if (error.response?.status === 404) return null
     throw error
@@ -250,18 +254,18 @@ async function openEdit(row) {
     const data = await fetchOfficialArticle(row.id)
     if (request !== editorRequest) return
     Object.assign(form, {
-      member_id: null, url: data.url, title: data.title, content: data.content,
+      user_id: null, url: data.url, title: data.title, content: data.content,
       imagesText: (data.image_urls || []).join('\n'), source: data.source,
       published_at: data.published_at ? new Date(data.published_at) : null,
       crawled_at: data.crawled_at ? new Date(data.crawled_at) : null,
       board: data.board || '', rank: data.rank ?? '',
     })
-    const member = await verifyPublisher(data.member_id)
+    const member = await verifyPublisher(data.user_id)
     if (request !== editorRequest) return
     if (member) {
       editorMembers.value = [member]
-      form.member_id = member.id
-    } else publisherWarning.value = '原发布人已删除或停用，请重新选择已启用会员后保存。'
+      form.user_id = member.member_no
+    } else publisherWarning.value = '原发布人已删除或停用，请重新选择已启用用户后保存。'
   } catch {
     if (request === editorRequest) {
       ElMessage.warning('无法载入文章或核验发布人，请稍后重试')
@@ -283,7 +287,7 @@ function beforeEditorClose(done) {
   done()
 }
 function makePayload() {
-  if (!form.member_id) throw new Error('请选择已启用的发布人')
+  if (!form.user_id) throw new Error('请选择已启用的发布人')
   if (!isHttpUrl(form.url.trim())) throw new Error('原文链接必须是有效的 HTTP / HTTPS 地址')
   if (!form.title.trim() || form.title.trim().length > 200) throw new Error('标题必填且最多 200 字')
   if (!form.content.trim() || form.content.length > 200000) throw new Error('正文必填且最多 200000 字')
@@ -299,7 +303,7 @@ function makePayload() {
     if (!date || Number.isNaN(date.getTime())) throw new Error(key === 'published_at' ? '请选择有效的发布时间' : '请选择有效的抓取时间')
     times[key] = date.toISOString()
   }
-  return { member_id: form.member_id, url: form.url.trim(), title: form.title.trim(), content: form.content, image_urls, source: form.source.trim(), ...times, board: form.board.trim() || null, rank }
+  return { user_id: form.user_id, url: form.url.trim(), title: form.title.trim(), content: form.content, image_urls, source: form.source.trim(), ...times, board: form.board.trim() || null, rank }
 }
 async function saveArticle() {
   if (saving.value || editor.loading || !editor.visible) return
@@ -308,10 +312,10 @@ async function saveArticle() {
   catch (error) { ElMessage.warning(error.message); return }
   saving.value = true
   try {
-    const member = await verifyPublisher(payload.member_id)
+    const member = await verifyPublisher(payload.user_id)
     if (!member) {
-      publisherWarning.value = '所选发布人已删除或停用，请重新选择已启用会员。'
-      form.member_id = null
+      publisherWarning.value = '所选发布人已删除或停用，请重新选择已启用用户。'
+      form.user_id = null
       editorMembers.value = []
       return
     }
