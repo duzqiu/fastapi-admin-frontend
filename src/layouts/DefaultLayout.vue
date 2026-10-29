@@ -745,7 +745,7 @@ async function onCommand(command) {
   position: relative;
   min-height: 0;
   overflow-y: auto;
-  overflow-x: clip;
+  overflow-x: auto;
   overscroll-behavior: contain;
 }
 
@@ -775,7 +775,7 @@ async function onCommand(command) {
   }
 }
 
-@media (max-width: 820px) {
+@media (max-width: 960px) {
   .stage {
     padding: 0;
   }

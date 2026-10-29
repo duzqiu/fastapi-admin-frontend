@@ -90,6 +90,12 @@ const menuStructure = [
     roles: ['admin'],
     children: [
       {
+        path: '/official-articles',
+        name: 'OfficialArticles',
+        component: () => import('@/views/article/official.vue'),
+        meta: { title: '官号文章', icon: 'Document', roles: ['admin'] },
+      },
+      {
         path: '/posts',
         name: 'Posts',
         component: () => import('@/views/article/post.vue'),
