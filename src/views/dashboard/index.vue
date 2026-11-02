@@ -74,10 +74,10 @@ const QUICK_COUNT = 4
 
 // 还没有使用记录时先摆这几页，顺便给它们当兜底文案
 const DEFAULT_QUICK = [
-  { path: '/dishes', desc: '菜名、价格、库存与套餐' },
   { path: '/members', desc: '会员档案与启用状态' },
-  { path: '/dish-orders', desc: '接单、完成与取消' },
-  { path: '/countdowns', desc: '会员的纪念日与提醒' },
+  { path: '/official-articles', desc: '官号文章发布与审核' },
+  { path: '/posts', desc: '动态内容与审核' },
+  { path: '/comments', desc: '文章评论管理' },
 ]
 const DEFAULT_DESC = Object.fromEntries(DEFAULT_QUICK.map((item) => [item.path, item.desc]))
 const DEFAULT_RANK = Object.fromEntries(

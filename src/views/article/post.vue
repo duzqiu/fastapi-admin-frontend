@@ -1,8 +1,8 @@
 <template>
   <div class="page-container">
     <PageHeader
-      title="帖子管理"
-      description="新帖默认「待审核」；审核为「已通过」或「已拒绝」后结果不可再更改。被拒绝的帖子需作者修改后重新提交，才会回到待审核重新走一遍审核。"
+      title="动态管理"
+      description="新动态默认「待审核」；审核为「已通过」或「已拒绝」后结果不可再更改。被拒绝的动态需作者修改后重新提交，才会回到待审核重新走一遍审核。"
     />
 
     <el-card shadow="never" class="app-card">
@@ -10,7 +10,7 @@
         <div class="toolbar__filters">
           <el-input
             v-model="query.keyword"
-            placeholder="帖子ID / 标题 / 正文 / 发布人"
+            placeholder="动态ID / 标题 / 正文 / 发布人"
             clearable
             style="width: 220px"
             @keyup.enter="handleSearch"
@@ -37,8 +37,8 @@
         </div>
       </div>
 
-      <el-table v-loading="loading" :data="rows" stripe row-key="id" empty-text="暂无帖子">
-        <el-table-column label="帖子ID" width="150">
+      <el-table v-loading="loading" :data="rows" stripe row-key="id" empty-text="暂无动态">
+        <el-table-column label="动态ID" width="150">
           <template #default="{ row }">
             <span class="post-no">{{ row.post_no || '-' }}</span>
           </template>
@@ -107,7 +107,7 @@
               type="warning"
               class="audit-btn"
               :disabled="row.status !== 'pending'"
-              :title="row.status === 'pending' ? '拒绝帖子' : '已审核，结果不可更改'"
+              :title="row.status === 'pending' ? '拒绝动态' : '已审核，结果不可更改'"
               :loading="auditLoadingId === row.id"
               @click="handleAudit(row, 'rejected')"
             >
@@ -132,7 +132,7 @@
       </div>
     </el-card>
 
-    <el-dialog v-model="detail.visible" title="帖子详情" width="640px">
+    <el-dialog v-model="detail.visible" title="动态详情" width="640px">
       <div v-if="detail.row" class="detail">
         <div class="detail__head">
           <span class="detail__title">{{ detail.row.title }}</span>
@@ -141,7 +141,7 @@
           </el-tag>
         </div>
         <div class="detail__meta">
-          帖子ID：{{ detail.row.post_no || '-' }}
+          动态ID：{{ detail.row.post_no || '-' }}
           <span class="detail__sep">·</span>
           发布人：{{ detail.row.publisher }}
           <span class="detail__sep">·</span>
@@ -233,7 +233,7 @@ function openDetail(row) {
 async function handleAudit(row, status) {
   // 双重保险：按钮已置灰，这里再拦一次，避免误触
   if (row.status !== 'pending') {
-    ElMessage.warning('该帖子已审核，结果不可再更改')
+    ElMessage.warning('该动态已审核，结果不可再更改')
     return
   }
 
@@ -270,7 +270,7 @@ async function handleAudit(row, status) {
 
 async function handleDelete(row) {
   try {
-    await ElMessageBox.confirm(`确定删除帖子「${row.title}」吗？该操作不可恢复。`, '删除确认', {
+    await ElMessageBox.confirm(`确定删除动态「${row.title}」吗？该操作不可恢复。`, '删除确认', {
       type: 'warning',
       confirmButtonText: '删除',
       cancelButtonText: '取消',
@@ -313,7 +313,7 @@ onMounted(loadData)
   font-size: 12px;
 }
 
-/* 12 位帖子ID：等宽数字 + 轻微字距，方便一眼核对 */
+/* 12 位动态ID：等宽数字 + 轻微字距，方便一眼核对 */
 .post-no {
   font-weight: 600;
   letter-spacing: 0.4px;

@@ -50,39 +50,6 @@ const menuStructure = [
     ],
   },
   {
-    // 一级菜单：菜品管理
-    key: 'dish',
-    title: '菜品管理',
-    icon: 'Bowl',
-    roles: ['admin'],
-    children: [
-      {
-        path: '/dishes',
-        name: 'Dishes',
-        component: () => import('@/views/dish/index.vue'),
-        meta: { title: '菜品列表', icon: 'Dish', roles: ['admin'] },
-      },
-      {
-        path: '/dish-categories',
-        name: 'DishCategories',
-        component: () => import('@/views/dish/category.vue'),
-        meta: { title: '菜品分类', icon: 'FolderOpened', roles: ['admin'] },
-      },
-      {
-        path: '/dish-tags',
-        name: 'DishTags',
-        component: () => import('@/views/dish/tag.vue'),
-        meta: { title: '菜品标签', icon: 'CollectionTag', roles: ['admin'] },
-      },
-      {
-        path: '/dish-orders',
-        name: 'DishOrders',
-        component: () => import('@/views/dish/order.vue'),
-        meta: { title: '订单管理', icon: 'Tickets', roles: ['admin'] },
-      },
-    ],
-  },
-  {
     // 一级菜单：文章管理
     key: 'article',
     title: '文章管理',
@@ -99,28 +66,13 @@ const menuStructure = [
         path: '/posts',
         name: 'Posts',
         component: () => import('@/views/article/post.vue'),
-        meta: { title: '帖子管理', icon: 'Document', roles: ['admin'] },
+        meta: { title: '动态管理', icon: 'Document', roles: ['admin'] },
       },
       {
         path: '/comments',
         name: 'Comments',
         component: () => import('@/views/article/comment.vue'),
         meta: { title: '评论管理', icon: 'ChatDotSquare', roles: ['admin'] },
-      },
-    ],
-  },
-  {
-    // 一级菜单：代办事项
-    key: 'todo',
-    title: '代办事项',
-    icon: 'Calendar',
-    roles: ['admin'],
-    children: [
-      {
-        path: '/countdowns',
-        name: 'Countdowns',
-        component: () => import('@/views/todo/countdown.vue'),
-        meta: { title: '倒数日', icon: 'AlarmClock', roles: ['admin'] },
       },
     ],
   },

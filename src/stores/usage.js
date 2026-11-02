@@ -40,7 +40,7 @@ function readCounts() {
 
 export const useUsageStore = defineStore('usage', {
   state: () => ({
-    // { '/dishes': 12, '/members': 5, ... } —— 累计访问次数
+    // { '/members': 5, '/posts': 3, ... } —— 累计访问次数
     counts: readCounts(),
   }),
 

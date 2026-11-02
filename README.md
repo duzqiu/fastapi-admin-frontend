@@ -35,11 +35,7 @@
 | └ 后台账号 | 列表搜索分页、新建、编辑、启用/禁用、重置密码、删除 |
 | 用户管理（一级菜单） | 收纳「用户列表」子菜单 |
 | └ 用户列表 | 用户中心注册用户：统计概览、6 位用户 ID 展示与检索、列表筛选、详情抽屉、编辑资料（昵称/头像上传/**背景图上传**/性别/生日/手机号/地区/简介）、启用/禁用、重置密码、删除 |
-| 菜品管理（一级菜单） | 收纳「菜品列表 / 菜品分类 / 菜品标签 / 订单管理」四个子菜单，侧边栏可折叠展开 |
-| ├ 菜品列表 | 菜名/图片（可上传）/价格/库存/单位/状态、分类与标签、**套餐与售卖规则**（起购/限购/每日限量/供应时段）、库存调整、上架下架、销量与统计 |
-| ├ 菜品分类 | 分类 CRUD，展示每个分类下的菜品数；分类下仍有菜品时禁止删除 |
-| ├ 菜品标签 | 标签 CRUD，可选语义色，展示关联菜品数与**启用状态**；停用后不再出现在 C 端菜单标签中 |
-| └ 订单管理 | 点菜订单列表（含**菜品明细**摘要、表格自适应满宽不留白）与筛选、订单详情（含明细快照）、接单/完成/取消（取消自动回滚库存与销量）、删除、今日经营统计 |
+| 文章管理（一级菜单） | 收纳「官号文章 / 动态管理 / 评论管理」子菜单 |
 | 个人中心 | 查看账号信息、修改密码 |
 | 体验细节 | 面包屑、菜单权限过滤、加载态、空状态、统一错误提示、响应式布局 |
 
@@ -88,7 +84,8 @@ fastapi-admin-frontend/
     │   ├── auth.js                 /auth/*     登录、当前用户、改密、登出
     │   ├── user.js                 /users/*    后台账号 CRUD、启禁用、重置密码
     │   ├── member.js               /members/*  用户中心会员：列表、统计、详情、编辑、启禁用、重置密码、头像 / 背景图上传与按 ID 读取
-    │   ├── dish.js                 /dishes/*   菜品 / 套餐 / 分类 / 标签 / 订单管理（点菜菜单）
+    │   ├── post.js                 /posts/*    动态与评论管理
+    │   ├── official-article.js     /official-articles/*  官号文章
     │   └── system.js               /system/*   健康检查、系统信息（接口封装）、首页统计
     │
     ├── router/                     ★ 路由
@@ -111,14 +108,13 @@ fastapi-admin-frontend/
     │   ├── dashboard/index.vue     仪表盘（统计卡片）
     │   ├── user/index.vue          用户管理（表格 / 搜索 / 弹窗表单 / 密码重置）
     │   ├── member/index.vue        用户列表（统计卡片 / 筛选 / 详情抽屉 / 编辑弹窗 / 启禁用）
-    │   ├── dish/index.vue          菜品管理（图片上传 / 分类标签 / 套餐与规则抽屉 / 库存调整）
-    │   ├── dish/category.vue       菜品分类管理（表格 + 弹窗表单）
-    │   ├── dish/tag.vue            菜品标签管理（表格 + 弹窗表单）
-    │   ├── dish/order.vue          订单管理（统计卡片 / 筛选 / 详情抽屉 / 状态流转）
+    │   ├── article/official.vue    官号文章（列表 / 发布 / 编辑 / 审核）
+    │   ├── article/post.vue        动态管理
+    │   ├── article/comment.vue     评论管理
     │   ├── profile/index.vue       个人中心（账号信息 + 修改密码）
     │   └── error/404.vue           404 页面
     │
-    ├── constants/index.js          与后端一致的枚举（角色、会员性别、菜品/订单状态）及展示映射
+    ├── constants/index.js          与后端一致的枚举（角色、会员性别、审核状态）及展示映射
     ├── utils/
     │   ├── auth.js                 令牌读写（localStorage 收口）
     │   └── format.js               日期、数字、文本格式化
@@ -218,11 +214,10 @@ npm run preview
 用户管理            （仅 admin）
   └ 用户列表        /members
 
-菜品管理            （仅 admin）
-  ├ 菜品列表        /dishes
-  ├ 菜品分类        /dish-categories
-  ├ 菜品标签        /dish-tags
-  └ 订单管理        /dish-orders
+文章管理            （仅 admin）
+  ├ 官号文章        /official-articles
+  ├ 动态管理        /posts
+  └ 评论管理        /comments
 ```
 
 - 菜单项分两类：**叶子菜单**（如仪表盘，直接是一级菜单）与**分组菜单**（带子菜单，可折叠展开）；
@@ -272,45 +267,9 @@ npm run preview
 - 表格内一键启用 / 禁用；重置密码；删除（带二次确认）。
 - 当前登录账号的禁用与删除按钮自动置灰，后端同时有「最后一个管理员」保护。
 
-> 下面四页统一收纳在侧边栏的一级菜单 **菜品管理** 下（`菜品管理 ▸ 菜品列表 / 菜品分类 / 菜品标签 / 订单管理`），
-> 面包屑会显示「首页 / 菜品管理 / 当前页」。
-
-### 菜品列表 `/dishes`（菜品管理 ▸ 菜品列表，仅 `admin` 角色可见）
-
-- **统计卡片**：菜品总数、在售中、库存告急（库存 < 10）、累计销量。
-- **筛选**：菜名/描述关键词、分类、标签、售卖状态、只看库存告急。
-- **新建 / 编辑**：菜名、描述、**图片（支持本地上传或直接填地址）**、价格、库存、单位、分类、标签（多选）、状态、排序、是否推荐。
-- **套餐与规则**：点「套餐」打开抽屉，可为同一道菜维护多个套餐，每个套餐独立设置
-  价格 / 库存 / 默认选中 / 是否可售，以及**起购份数、每单限购、每日限量、供应时段**；
-  抽屉内展示每个套餐的已售、今日已售、规则摘要。
-  未配置套餐的菜品会直接按菜品自身的价格与库存售卖。
-- **库存调整**：支持「补货 / 报损（在原库存上增减）」与「直接设为」两种方式。
-- **一键上下架**；表格中实时展示每个菜品的**已售数量**。
-
-### 菜品分类 `/dish-categories`（菜品管理 ▸ 菜品分类，仅 `admin` 角色可见）
-
-- 分类 CRUD（名称 / 描述 / 排序 / 启用状态），表格展示每个分类下的菜品数。
-- 分类下仍有菜品时后端会拒绝删除并给出提示。
-
-### 菜品标签 `/dish-tags`（菜品管理 ▸ 菜品标签，仅 `admin` 角色可见）
-
-- 标签 CRUD（名称 / 语义色 / 排序 / **启用状态**），表格展示关联菜品数、颜色名称与状态。
-- **停用**后该标签不再出现在 C 端菜单的标签列表与菜品标签中；后台仍可查看、编辑，
-  也可以继续挂在菜品上（不影响历史数据）。重新启用即可恢复展示。
-- 删除标签只解除关联，不会删除菜品本身。
-
-### 订单管理 `/dish-orders`（菜品管理 ▸ 订单管理，仅 `admin` 角色可见）
-
-- **统计卡片**：订单总数、待接单、今日订单、今日营业额。
-- **筛选**：订单号 / 桌号关键词、订单状态、下单时间范围。
-- **列表**：订单号、菜品明细摘要、桌号、下单人（会员昵称或「扫码点单」）、份数、金额、状态、下单时间；
-  列宽自适应容器满宽，窄屏自动省略号 + 悬停查看完整内容。
-- **详情抽屉**：订单信息 + 菜品明细（菜名、套餐名、图片、单价快照、数量、小计）+ 合计金额 + 快捷操作。
-- **状态流转**：待接单 →（接单）→ 已接单 →（完成）→ 已完成；待接单 / 已接单可取消。
-  **取消确认时会明确提示会回滚库存与销量**；已完成 / 已取消为终态。
-
-> 点菜菜单（`/api/v1/menu/**`）是面向顾客的 C 端接口：浏览无需登录、下单支持扫码匿名，
-> 本管理端只消费其中的后台管理接口。如需顾客端页面，可直接对接后端 `/menu/**` 接口。
+> 后台菜品管理与待办（倒数日）模块已下线：侧边栏不再提供「菜品管理」分组，
+> 对应的后台接口 `/dishes`、`/dish-categories`、`/dish-tags`、`/dish-orders`、`/countdowns`、
+> C 端点菜菜单 `/menu/**` 及这些功能的数据表均已移除。
 
 ### 个人中心 `/profile`
 
@@ -380,10 +339,8 @@ Authorization: Bearer <access_token>     # 登录后自动添加
 | 仪表盘 | `GET /system/dashboard` |
 | 用户管理（后台账号） | `GET/POST /users`、`PUT /users/{id}`、`PATCH /users/{id}/status`、`PATCH /users/{id}/password`、`DELETE /users/{id}` |
 | 用户列表（用户中心） | `GET /members`（`keyword` 支持用户ID / 邮箱 / 昵称 / 手机号）、`GET /members/stats`、`GET/PUT /members/{id}`、`POST /members/{id}/avatar`（上传头像）、`GET /members/{id}/avatar`（按会员 ID 读头像）、`POST /members/{id}/background`（上传背景图）、`GET /members/{id}/background`（按会员 ID 读背景图）、`PATCH /members/{id}/status`、`PATCH /members/{id}/password`、`DELETE /members/{id}` |
-| 菜品管理 | `GET/POST /dishes`、`GET/PUT/DELETE /dishes/{id}`、`PATCH /dishes/{id}/status`、`PATCH /dishes/{id}/stock`、`POST /dishes/upload-image`、`GET /dishes/stats` |
-| 套餐管理 | `GET/POST /dishes/{id}/specs`、`PUT/DELETE /dishes/{id}/specs/{spec_id}` |
-| 分类 / 标签 | `GET/POST /dish-categories`、`PUT/DELETE /dish-categories/{id}`、`GET/POST /dish-tags`（支持 `only_active`）、`PUT/DELETE /dish-tags/{id}` |
-| 订单管理 | `GET /dish-orders`、`GET /dish-orders/{id}`、`PATCH /dish-orders/{id}/status`、`DELETE /dish-orders/{id}`、`GET /dish-orders/stats`、`GET /dish-orders/dish-sales` |
+| 官号文章 | `GET/POST /official-articles`、`GET/PUT/DELETE /official-articles/{id}`、`PATCH /official-articles/{id}/status` |
+| 动态 / 评论 | `GET/PATCH/DELETE /posts`、`GET/PATCH/DELETE /posts/comments/...` |
 
 ### 会员头像的显示
 
@@ -562,7 +519,7 @@ Docker 部署（方案 C）额外确认：
 | 刷新页面 404 | 服务器未配置 `try_files $uri $uri/ /index.html` |
 | 改了 `.env` 不生效 | 需重启 `npm run dev`；`.env` 在构建时被静态替换 |
 | 登录后一直跳回登录页 | 本地令牌已失效，清理浏览器 `localStorage` 中的 `admin_access_token` / `admin_refresh_token` 后重试 |
-| 菜单里看不到「后台账号 / 用户管理 / 菜品管理」 | 这些一级菜单及其子项仅 `admin` 角色可见 |
+| 菜单里看不到「后台账号 / 用户管理 / 文章管理」 | 这些一级菜单及其子项仅 `admin` 角色可见 |
 | 会员头像显示为字母圆块 | 该会员未上传头像且默认头像也没取到（属于预期降级）；已上传却仍不显示时，检查 `/api/v1/static/` 是否被代理放行 |
 | 端口被占用 | `npm run dev -- --port 5174` 指定其他端口 |
 | Docker 里页面能打开但所有接口 502 | Nginx 代理不到后端：`API_UPSTREAM` 写错，或前端容器没和后端在同一网络。在容器内直接验证：`docker exec admin-frontend wget -qO- http://backend:8000/api/v1/system/health` |

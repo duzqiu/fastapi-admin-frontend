@@ -2,7 +2,7 @@
   <div class="page-container">
     <PageHeader
       title="评论管理"
-      description="用户在 App 里发的评论默认「待审核」，审核为「已通过」后才会在帖子详情页展示；已拒绝 / 已通过的评论结果是终态。"
+      description="用户在 App 里发的评论默认「待审核」，审核为「已通过」后才会在动态详情页展示；已拒绝 / 已通过的评论结果是终态。"
     />
 
     <el-card shadow="never" class="app-card">
@@ -10,7 +10,7 @@
         <div class="toolbar__filters">
           <el-input
             v-model="query.keyword"
-            placeholder="评论内容 / 评论人 / 帖子ID"
+            placeholder="评论内容 / 评论人 / 动态ID"
             clearable
             style="width: 240px"
             @keyup.enter="handleSearch"
@@ -38,9 +38,9 @@
       </div>
 
       <el-table v-loading="loading" :data="rows" stripe row-key="id" empty-text="暂无评论">
-        <el-table-column label="帖子ID" width="150">
+        <el-table-column label="动态ID" width="150">
           <template #default="{ row }">
-            <!-- 只展示对外的 12 位帖子编号，样式与「帖子管理」一致 -->
+            <!-- 只展示对外的 12 位动态编号，样式与「动态管理」一致 -->
             <span class="post-no">{{ row.post_no || '-' }}</span>
           </template>
         </el-table-column>
@@ -113,9 +113,9 @@
           </el-tag>
         </div>
         <div class="detail__meta">
-          帖子标题：{{ detail.row.post_title || '-' }}
+          动态标题：{{ detail.row.post_title || '-' }}
           <span class="detail__sep">·</span>
-          帖子ID：{{ detail.row.post_no || '-' }}
+          动态ID：{{ detail.row.post_no || '-' }}
           <span class="detail__sep">·</span>
           评论时间：{{ formatDateTime(detail.row.created_at) }}
         </div>
@@ -222,13 +222,13 @@ onMounted(loadData)
 </script>
 
 <style scoped lang="scss">
-/* 已审核的行：两个审核按钮明显置灰，避免看起来还能点（与「帖子管理」一致） */
+/* 已审核的行：两个审核按钮明显置灰，避免看起来还能点（与「动态管理」一致） */
 .audit-btn.is-disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-/* 12 位帖子ID：等宽数字 + 轻微字距，和「帖子管理」保持一致 */
+/* 12 位动态ID：等宽数字 + 轻微字距，和「动态管理」保持一致 */
 .post-no {
   font-weight: 600;
   letter-spacing: 0.4px;

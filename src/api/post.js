@@ -1,7 +1,7 @@
 /**
- * 文章管理（帖子）接口
+ * 文章管理（动态）接口
  *
- * 后台管理用 `/posts`（需管理员）；用户发帖同样是 `POST /posts`，
+ * 后台管理用 `/posts`（需管理员）；用户发动态同样是 `POST /posts`，
  * 但由 C 端调用、默认进「待审核」，这里也一并封装，方便联调。
  */
 
@@ -24,7 +24,7 @@ export function deletePost(id) {
   return request.delete(`/posts/${id}`)
 }
 
-/** 用户发帖：{ publisher, title, content, images: [], published_at } */
+/** 用户发动态：{ publisher, title, content, images: [], published_at } */
 export function createPost(data) {
   return request.post('/posts', data)
 }

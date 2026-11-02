@@ -24,8 +24,7 @@ export const MEMBER_GENDERS = [
   { value: 'female', label: '女', tag: 'danger', icon: 'Female' },
 ]
 
-/** 菜品售卖状态（与后端 DishStatus 一致） */
-/** 帖子审核状态（与后端 PostStatus 一致） */
+/** 动态审核状态（与后端 PostStatus 一致） */
 export const POST_STATUS = [
   { value: 'pending', label: '待审核', tag: 'warning' },
   { value: 'approved', label: '已通过', tag: 'success' },
@@ -37,29 +36,6 @@ export const postStatusLabel = (value) =>
 
 export const postStatusTagType = (value) =>
   POST_STATUS.find((item) => item.value === value)?.tag || 'info'
-
-export const DISH_STATUS = [
-  { value: 'on_sale', label: '在售', tag: 'success' },
-  { value: 'off_shelf', label: '已下架', tag: 'info' },
-  { value: 'sold_out', label: '已售罄', tag: 'warning' },
-]
-
-/** 订单状态（与后端 OrderStatus 一致） */
-export const ORDER_STATUS = [
-  { value: 'pending', label: '待接单', tag: 'warning' },
-  { value: 'confirmed', label: '已接单', tag: 'primary' },
-  { value: 'completed', label: '已完成', tag: 'success' },
-  { value: 'cancelled', label: '已取消', tag: 'info' },
-]
-
-/** 倒数日重复周期（与后端 CountdownCycle 一致） */
-export const COUNTDOWN_CYCLES = [
-  { value: 'once', label: '一次性', tag: 'info' },
-  { value: 'daily', label: '每天', tag: 'info' },
-  { value: 'weekly', label: '每周', tag: 'primary' },
-  { value: 'monthly', label: '每月', tag: 'success' },
-  { value: 'yearly', label: '每年', tag: 'warning' },
-]
 
 /** 个人网站·性别（与后端 ResumeGender 一致，独立于会员性别） */
 export const RESUME_GENDERS = [
@@ -103,15 +79,6 @@ export const roleTagType = (value) => findOption(USER_ROLES, value)?.tag || 'inf
 export const genderLabel = (value) => findOption(MEMBER_GENDERS, value)?.label || '保密'
 export const genderTagType = (value) => findOption(MEMBER_GENDERS, value)?.tag || 'info'
 export const genderIcon = (value) => findOption(MEMBER_GENDERS, value)?.icon || 'QuestionFilled'
-
-export const dishStatusLabel = (value) => findOption(DISH_STATUS, value)?.label || value
-export const dishStatusTagType = (value) => findOption(DISH_STATUS, value)?.tag || 'info'
-
-export const orderStatusLabel = (value) => findOption(ORDER_STATUS, value)?.label || value
-export const orderStatusTagType = (value) => findOption(ORDER_STATUS, value)?.tag || 'info'
-
-export const countdownCycleLabel = (value) => findOption(COUNTDOWN_CYCLES, value)?.label || value
-export const countdownCycleTagType = (value) => findOption(COUNTDOWN_CYCLES, value)?.tag || 'info'
 
 export const resumeGenderLabel = (value) => findOption(RESUME_GENDERS, value)?.label || '保密'
 export const resumeGenderTagType = (value) => findOption(RESUME_GENDERS, value)?.tag || 'info'
