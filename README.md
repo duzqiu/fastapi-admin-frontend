@@ -32,7 +32,7 @@
 | 仪表盘 | 统计卡片（注册会员 / 近 7 天新增 / 后台账号）+ 「常用入口」按访问频次排序 |
 | 后台管理 ▸ 后台账号 | 列表搜索分页、新建、编辑、启用/禁用、重置密码、删除 |
 | 用户管理 ▸ 用户列表 | 会员统计、10 位会员编号展示与检索、筛选、详情抽屉、编辑资料、头像/背景图上传、启禁用、重置密码、删除 |
-| 文章管理 | 官号文章（发布/编辑/审核/访问量）、动态管理、评论管理（审核 / 删除） |
+| 文章管理 | 官号文章（发布/编辑/审核/访问量）、动态管理、评论管理（审核 / 删除）、热搜榜单（查询 / 编辑 / 删除，无发布入口） |
 | 个人网站 | 站点欢迎语、关于我解锁密码、六类简历数据（个人信息 / 技能标签 / 教育 / 工作 / 项目 / 自我评价） |
 | 个人中心 | 账号信息、修改密码 |
 | 外观 | 浅色 / 深色主题切换（跟随系统或手动，偏好持久化） |
@@ -88,6 +88,7 @@ fastapi-admin-frontend/
     │   ├── post.js                 /posts/*         动态列表、审核、删除、发布
     │   ├── comment.js              /comments/*      评论列表、审核、删除
     │   ├── official-article.js     /official-articles/*
+    │   ├── hot-list.js             /hot-lists/*     热搜榜单：按渠道出榜、渠道清单、后台条目查询 / 编辑 / 删除
     │   ├── resume.js               /resume/*        六类简历 CRUD + 启停 + 对外合并接口
     │   ├── site.js                 /site/admin/*    欢迎语、关于我密码
     │   └── system.js               /system/*        健康检查、运行信息、首页统计
@@ -121,6 +122,7 @@ fastapi-admin-frontend/
     │   ├── article/official.vue    官号文章
     │   ├── article/post.vue        动态管理
     │   ├── article/comment.vue     评论管理
+    │   ├── article/hot-list.vue    热搜榜单（条目查询 / 编辑 / 删除）
     │   ├── site/welcome.vue        欢迎语
     │   ├── site/about-password.vue 解锁密码
     │   ├── resume/profile.vue      个人信息
@@ -222,7 +224,8 @@ npm run preview
 文章管理（仅 admin）
   ├ 官号文章                    /official-articles
   ├ 动态管理                    /posts
-  └ 评论管理                    /comments
+  ├ 评论管理                    /comments
+  └ 热搜榜单                    /hot-lists
 
 个人网站（仅 admin）
   ├ 欢迎语                      /site-welcome
@@ -272,6 +275,14 @@ npm run preview
 | 官号文章 `/official-articles` | 列表（关键词 / 状态 / 来源 / 用户 ID）、发布、编辑、审核、删除 |
 | 动态管理 `/posts` | 列表筛选、查看详情、审核（通过 / 拒绝为终态）、删除 |
 | 评论管理 `/comments` | 列表筛选（含动态 ID）、审核、删除；官号文章评论同样在此管理 |
+| 热搜榜单 `/hot-lists` | 条目列表（ID / 渠道 / 标题 / 热度 / 标签 / 排名 / 创建与更新时间）、关键词与渠道筛选、编辑、删除；条目由爬虫写入，**无发布入口** |
+
+热搜榜单是文章板块的一页，与官号文章 / 动态 / 评论并列：条目由爬虫项目
+`scrapy-hotList-crawler` 抓取后直接写库，因此后台**只有查询 / 编辑 / 删除，没有发布入口**。
+
+- `heat` 是原始热度文本（`128.6万`），`rank` 也按原样保存（可能是 `1`、`12` 或 `置顶`），前端不做数值转换；
+- `tabs` 是徽标数组，列表里铺成小标签；编辑时可直接输入新标签（回车创建）；
+- 渠道下拉取自公开接口 `GET /hot-lists/sources`，带各渠道条数，方便挑一个榜看。
 
 ### 个人网站
 
@@ -345,6 +356,7 @@ Authorization: Bearer <access_token>      # 登录后自动添加
 | 后台账号 | `GET/POST /users`、`GET/PUT/DELETE /users/{id}`、`PATCH /users/{id}/status`、`PATCH /users/{id}/password` |
 | 用户列表 | `GET /members`、`GET /members/stats`、`GET/PUT /members/{id}`、`POST/GET /members/{id}/avatar`、`POST/GET /members/{id}/background`、`PATCH /members/{id}/status`、`PATCH /members/{id}/password`、`DELETE /members/{id}` |
 | 官号文章 | `GET/POST /official-articles`、`GET/PUT/DELETE /official-articles/{id}`、`PATCH /official-articles/{id}/status` |
+| 热搜榜单 | `GET /hot-lists/admin`、`GET/PUT/DELETE /hot-lists/admin/{id}`、`GET /hot-lists/sources` |
 | 动态 / 评论 | `GET /posts`、`GET /posts/{id}`、`PATCH /posts/{id}/status`、`DELETE /posts/{id}`、`GET /comments`、`PATCH /comments/{id}/status`、`DELETE /comments/{id}` |
 | 站点设置 | `GET/PUT /site/admin/welcome`、`GET/PUT /site/admin/about-password` |
 | 简历 | `/resume/personal-infos`、`/resume/educations`、`/resume/work-experiences`、`/resume/projects`、`/resume/evaluations`、`/resume/skill-tags` 的 CRUD + `/{id}/status`；`POST /resume/personal-infos/upload-avatar` |

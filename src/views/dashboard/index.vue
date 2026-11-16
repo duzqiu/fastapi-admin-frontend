@@ -78,6 +78,7 @@ const DEFAULT_QUICK = [
   { path: '/official-articles', desc: '官号文章发布与审核' },
   { path: '/posts', desc: '动态内容与审核' },
   { path: '/comments', desc: '文章评论管理' },
+  { path: '/hot-lists', desc: '热搜榜单条目查询与维护' },
 ]
 const DEFAULT_DESC = Object.fromEntries(DEFAULT_QUICK.map((item) => [item.path, item.desc]))
 const DEFAULT_RANK = Object.fromEntries(

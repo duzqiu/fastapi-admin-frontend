@@ -50,7 +50,7 @@ const menuStructure = [
     ],
   },
   {
-    // 一级菜单：文章管理
+    // 一级菜单：文章管理（动态 / 官号文章 / 评论 / 热搜榜单同属一个板块）
     key: 'article',
     title: '文章管理',
     icon: 'Collection',
@@ -73,6 +73,13 @@ const menuStructure = [
         name: 'Comments',
         component: () => import('@/views/article/comment.vue'),
         meta: { title: '评论管理', icon: 'ChatDotSquare', roles: ['admin'] },
+      },
+      {
+        // 热搜榜单：条目由爬虫写入，后台只做查询 / 编辑 / 删除
+        path: '/hot-lists',
+        name: 'HotLists',
+        component: () => import('@/views/article/hot-list.vue'),
+        meta: { title: '热搜榜单', icon: 'TrendCharts', roles: ['admin'] },
       },
     ],
   },

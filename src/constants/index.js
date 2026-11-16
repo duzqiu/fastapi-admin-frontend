@@ -61,6 +61,9 @@ export const EDUCATION_DEGREES = [
   { value: 'doctor', label: '博士', tag: 'warning' },
 ]
 
+/** 热搜榜单条目常见徽标（后台编辑标签时的候选项，可自由输入其它值） */
+export const HOT_TAG_SUGGESTIONS = ['热', '新', '沸', '爆', '荐']
+
 /** 标签可选颜色（对应 Element Plus 语义色） */
 export const TAG_COLORS = [
   { value: '', label: '默认' },
