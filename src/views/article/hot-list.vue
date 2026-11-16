@@ -2,7 +2,7 @@
   <div class="page-container">
     <PageHeader
       title="热搜榜单"
-      description="热搜榜单条目由爬虫抓取后直接入库，后台只做查询 / 编辑 / 删除，不提供发布入口。"
+      description="热搜榜单条目由爬虫抓取后直接入库，后台只做查询 / 编辑 / 删除，不提供发布入口；已从最新榜单消失的条目会被置为禁用，不会删除。"
     />
 
     <el-card shadow="never" class="app-card">
@@ -34,6 +34,17 @@
               :label="`${item.source}（${item.count}）`"
               :value="item.source"
             />
+          </el-select>
+
+          <el-select
+            v-model="query.is_active"
+            placeholder="全部状态"
+            clearable
+            style="width: 140px"
+            @change="handleSearch"
+          >
+            <el-option label="启用中" value="true" />
+            <el-option label="已禁用" value="false" />
           </el-select>
 
           <el-button type="primary" plain @click="handleSearch">
@@ -75,9 +86,9 @@
         </el-table-column>
         <el-table-column label="标签" min-width="160">
           <template #default="{ row }">
-            <div v-if="row.tabs?.length" class="tag-list">
+            <div v-if="row.tags?.length" class="tag-list">
               <el-tag
-                v-for="tag in row.tabs"
+                v-for="tag in row.tags"
                 :key="tag"
                 size="small"
                 effect="plain"
@@ -94,6 +105,17 @@
             <span :class="{ 'rank-number': isNumericRank(row.rank) }">
               {{ row.rank ?? '-' }}
             </span>
+          </template>
+        </el-table-column>
+        <el-table-column label="状态" width="110">
+          <template #default="{ row }">
+            <el-tag
+              :type="row.is_active ? 'success' : 'info'"
+              size="small"
+              effect="plain"
+            >
+              {{ row.is_active ? '启用中' : '已禁用' }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="创建时间" width="170">
@@ -184,9 +206,9 @@
           />
         </el-form-item>
 
-        <el-form-item label="标签" prop="tabs">
+        <el-form-item label="标签" prop="tags">
           <el-select
-            v-model="form.tabs"
+            v-model="form.tags"
             multiple
             filterable
             allow-create
@@ -211,6 +233,18 @@
             clearable
             placeholder="原样保存，可为「置顶」等非数字；留空表示不展示"
           />
+        </el-form-item>
+
+        <el-form-item label="状态" prop="is_active">
+          <el-switch
+            v-model="form.is_active"
+            active-text="启用"
+            inactive-text="禁用"
+            inline-prompt
+          />
+          <div class="form-tip">
+            禁用后前台不再返回该条；下一轮抓取如果仍在榜单里，爬虫会自动重新启用
+          </div>
         </el-form-item>
       </el-form>
 
@@ -256,6 +290,8 @@ const query = reactive({
   page_size: 10,
   keyword: '',
   source: '',
+  // '' = 全部，'true' / 'false' 对应后端 is_active
+  is_active: '',
 })
 
 const formRef = ref(null)
@@ -266,8 +302,9 @@ const defaultForm = () => ({
   source: '',
   name: '',
   heat: '',
-  tabs: [],
+  tags: [],
   rank: '',
+  is_active: true,
 })
 const form = reactive(defaultForm())
 
@@ -276,7 +313,7 @@ function isNumericRank(value) {
   return /^\d+$/.test(String(value ?? ''))
 }
 
-function validateTabs(rule, value, callback) {
+function validateTags(rule, value, callback) {
   const tags = Array.isArray(value) ? value : []
   if (tags.length > 20) {
     callback(new Error('最多 20 个标签'))
@@ -299,7 +336,7 @@ const formRules = {
     { max: 200, message: '标题最多 200 字', trigger: 'blur' },
   ],
   heat: [{ max: 50, message: '热度最多 50 字', trigger: 'blur' }],
-  tabs: [{ validator: validateTabs, trigger: 'change' }],
+  tags: [{ validator: validateTags, trigger: 'change' }],
   rank: [{ max: 20, message: '排名最多 20 字', trigger: 'blur' }],
 }
 
@@ -315,6 +352,7 @@ function buildParams() {
   const params = { page: query.page, page_size: query.page_size }
   if (query.keyword.trim()) params.keyword = query.keyword.trim()
   if (query.source) params.source = query.source
+  if (query.is_active !== '') params.is_active = query.is_active
   return params
 }
 
@@ -339,6 +377,7 @@ function handleSearch() {
 function handleReset() {
   query.keyword = ''
   query.source = ''
+  query.is_active = ''
   handleSearch()
 }
 
@@ -353,17 +392,18 @@ function openEdit(row) {
     source: row.source || '',
     name: row.name || '',
     heat: row.heat ?? '',
-    tabs: [...(row.tabs || [])],
+    tags: [...(row.tags || [])],
     rank: row.rank ?? '',
+    is_active: row.is_active !== false,
   })
   dialog.visible = true
   loadSources()
 }
 
-/** 只提交表单里这五个内容字段；heat / rank 留空即清空 */
+/** 只提交表单里的内容字段 + 启用状态；heat / rank 留空即清空 */
 function buildPayload() {
   const tags = []
-  for (const raw of form.tabs || []) {
+  for (const raw of form.tags || []) {
     const tag = String(raw).trim()
     if (tag && !tags.includes(tag)) tags.push(tag)
   }
@@ -371,8 +411,9 @@ function buildPayload() {
     source: String(form.source ?? '').trim(),
     name: String(form.name ?? '').trim(),
     heat: String(form.heat ?? '').trim() || null,
-    tabs: tags,
+    tags: tags,
     rank: String(form.rank ?? '').trim() || null,
+    is_active: form.is_active !== false,
   }
   if (!payload.source) throw new Error('渠道必填')
   if (!payload.name) throw new Error('标题必填')

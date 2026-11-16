@@ -2,7 +2,7 @@ import request from './request'
 
 /**
  * 前台：按渠道取热搜榜单（公开接口，无需登录）
- * 响应：{ source, count, items } —— count 是该渠道在库里的总条数
+ * 响应：{ source, count, items } —— count 是该渠道启用中的条数，items 只含启用条目
  */
 export function fetchHotListBoard(params) {
   return request.get('/hot-lists', { params })
